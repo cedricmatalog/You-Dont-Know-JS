@@ -209,4 +209,25 @@ g.constructor === Student;               // true -- oops, still Student
 
 `suzy.constructor` is a lookup. You can assign `suzy.constructor = 42`. You can `Object.defineProperty` it non-enumerable like `class` does. None of that is the `[[Prototype]]` link. Don't debug inheritance by logging `.constructor` alone -- walk `Object.getPrototypeOf`.
 
+## Two Graphs For One Classroom
+
+Kyle (counter of quiz attempts) and Suzy (label of the quiz name) cooperating is Chapter 5. The inheritance-shaped version is `class LabeledCounter extends Counter`. The delegation-shaped version is `Object.create` plus `this`. Both can print `"clicks: 2"`. Only one of them claims Kyle *is-a* Counter.
+
+If the product later needs a labeled *timer* that is not a counter, the `extends` tree wants another subclass or a mixin. The peer graph adds a `Timer` object and a `this` call. That is why the word matters: it decides which graph you reach for when the domain refuses to stay a tree -- which is immediately, in any real classroom app.
+
+Don't delete `class`. Do notice when you typed `extends` because the word "inheritance" was sitting on the keyboard, not because you had a taxonomy.
+
+## `Object.create(null)` Is A Dictionary, Not A Broken Object
+
+```js
+var dict = Object.create(null);
+dict.toString = 1;
+dict.toString;               // 1
+({}).toString;               // function
+```
+
+Chapter 2 already walked this: a dictionary that might contain the key `"toString"` *must not* delegate to `Object.prototype`. That's not hostility to objects. That's picking the empty chain so lookup means own keys. `class` instances should *not* be `Object.create(null)` -- they need `Object.prototype` (and your prototype) for methods. Mixing "I wanted a map" with "I wanted a student" is how `hasOwnProperty` as a key eats your method.
+
+`Map` is the other honest dictionary (any keys). This appendix exists so you don't call `[[Prototype]]` "inheritance" *or* call a prototype-linked POJO a map. Two tools. Two names.
+
 That's the exploring of the word. Appendix B is the pre-`class` wiring and the protected hole. Appendix C is your turn to type.

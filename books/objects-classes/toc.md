@@ -59,6 +59,8 @@
     * Mixins Are Copying On Purpose
     * Private Fields Do Not Walk
     * `constructor` Is A Property, Not Magic
+    * Two Graphs For One Classroom
+    * `Object.create(null)` Is A Dictionary, Not A Broken Object
 * Appendix B: Prototypal Classes & Protected Visibility
     * Prototypal Classes
     * Protected Visibility
