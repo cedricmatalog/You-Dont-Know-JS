@@ -2,11 +2,11 @@
 
 This is a series of books diving deep into the core mechanisms of the JavaScript language. This is the **second edition** of the book series:
 
-<a href="https://leanpub.com/ydkjsy-get-started"><img src="get-started/images/cover.png" width="75"></a>&nbsp;&nbsp;
-<a href="https://leanpub.com/ydkjsy-scope-closures"><img src="scope-closures/images/cover.png" width="75"></a>&nbsp;&nbsp;
+<a href="https://leanpub.com/ydkjsy-get-started"><img src="books/get-started/images/cover.png" width="75"></a>&nbsp;&nbsp;
+<a href="https://leanpub.com/ydkjsy-scope-closures"><img src="books/scope-closures/images/cover.png" width="75"></a>&nbsp;&nbsp;
 <a href="https://leanpub.com/ydkjsy-unbooks"><img src="unbooks-cover.png" width="75"></a>
 
-**To read more about the motivations and perspective behind this book series, check out the [Preface](preface.md).**
+**To read more about the motivations and perspective behind this book series, check out the [Preface](books/preface.md).**
 
 If you're looking for the previous **first edition** books, [they can be found here](https://github.com/getify/You-Dont-Know-JS/blob/1st-ed/README.md).
 
@@ -14,12 +14,12 @@ If you're looking for the previous **first edition** books, [they can be found h
 
 I recommend reading the **second edition** books in this order:
 
-* [Get Started](get-started/README.md) | [Buy on Leanpub](https://leanpub.com/ydkjsy-get-started) | [Buy on Amazon](https://www.amazon.com/dp/B084BNMN7T)
-* [Scope & Closures](scope-closures/README.md) | [Buy on Leanpub](https://leanpub.com/ydkjsy-scope-closures) | [Buy on Amazon](https://www.amazon.com/dp/B08634PZ3N)
-* [Objects & Classes](objects-classes/README.md)
-* [Types & Grammar](types-grammar/README.md)
-* [Sync & Async](sync-async/README.md)
-* [ES.Next & Beyond](es-next-beyond/README.md)
+* [Get Started](books/get-started/README.md) | [Buy on Leanpub](https://leanpub.com/ydkjsy-get-started) | [Buy on Amazon](https://www.amazon.com/dp/B084BNMN7T)
+* [Scope & Closures](books/scope-closures/README.md) | [Buy on Leanpub](https://leanpub.com/ydkjsy-scope-closures) | [Buy on Amazon](https://www.amazon.com/dp/B08634PZ3N)
+* [Objects & Classes](books/objects-classes/README.md)
+* [Types & Grammar](books/types-grammar/README.md)
+* [Sync & Async](books/sync-async/README.md)
+* [ES.Next & Beyond](books/es-next-beyond/README.md)
 
 Books 3 and 4 are also collected as **"The Unbooks"** ebook: [Buy on Leanpub](https://leanpub.com/ydkjsy-unbooks) | [Buy on Amazon](https://www.amazon.com/dp/B0F7H1DN5S)
 

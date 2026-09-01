@@ -148,7 +148,7 @@ export function renderMarkdown(markdown, { bookId, chapterId }) {
 				return `<a href="${escapeHtml(next)}"${titleAttr}${extra}>${inner}</a>`;
 			},
 			image({ href, title, text }) {
-				const src = href?.startsWith("images/") ? `/${bookId}/${href}` : href;
+				const src = href?.startsWith("images/") ? `/books/${bookId}/${href}` : href;
 				const titleAttr = title ? ` title="${escapeHtml(title)}"` : "";
 				return `<img src="${escapeHtml(src)}" alt="${escapeHtml(text)}"${titleAttr} loading="lazy">`;
 			},
@@ -159,7 +159,7 @@ export function renderMarkdown(markdown, { bookId, chapterId }) {
 
 	return html.replace(
 		/(src=["'])images\//g,
-		`$1/${bookId}/images/`,
+		`$1/books/${bookId}/images/`,
 	);
 }
 

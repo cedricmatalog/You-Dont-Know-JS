@@ -119,13 +119,13 @@ export const books = [
 
 export const sources = import.meta.glob(
 	[
-		"../preface.md",
-		"../get-started/{foreword,ch1,ch2,ch3,ch4,apA,apB}.md",
-		"../scope-closures/{foreword,ch1,ch2,ch3,ch4,ch5,ch6,ch7,ch8,apA,apB}.md",
-		"../objects-classes/{foreword,ch1,ch2,ch3,ch4,ch5,apA,apB,apC,thanks}.md",
-		"../types-grammar/{foreword,ch1,ch2,ch3,ch4,ch5,apA,apB,thanks}.md",
-		"../sync-async/{foreword,ch1,ch2,ch3,ch4,ch5,ch6,apA,apB,thanks}.md",
-		"../es-next-beyond/{foreword,ch1,ch2,ch3,ch4,ch5,apA,apB,thanks}.md",
+		"../books/preface.md",
+		"../books/get-started/{foreword,ch1,ch2,ch3,ch4,apA,apB}.md",
+		"../books/scope-closures/{foreword,ch1,ch2,ch3,ch4,ch5,ch6,ch7,ch8,apA,apB}.md",
+		"../books/objects-classes/{foreword,ch1,ch2,ch3,ch4,ch5,apA,apB,apC,thanks}.md",
+		"../books/types-grammar/{foreword,ch1,ch2,ch3,ch4,ch5,apA,apB,thanks}.md",
+		"../books/sync-async/{foreword,ch1,ch2,ch3,ch4,ch5,ch6,apA,apB,thanks}.md",
+		"../books/es-next-beyond/{foreword,ch1,ch2,ch3,ch4,ch5,apA,apB,thanks}.md",
 	],
 	{ query: "?raw", import: "default" },
 );

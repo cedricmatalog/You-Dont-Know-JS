@@ -16,10 +16,10 @@ function copyBookImages() {
 		name: "copy-book-images",
 		closeBundle() {
 			for (const book of books) {
-				const from = join(process.cwd(), book, "images");
+				const from = join(process.cwd(), "books", book, "images");
 				if (!existsSync(from)) continue;
-				const to = join(process.cwd(), "dist", book, "images");
-				mkdirSync(join(process.cwd(), "dist", book), { recursive: true });
+				const to = join(process.cwd(), "dist", "books", book, "images");
+				mkdirSync(join(process.cwd(), "dist", "books", book), { recursive: true });
 				cpSync(from, to, { recursive: true });
 			}
 		},
