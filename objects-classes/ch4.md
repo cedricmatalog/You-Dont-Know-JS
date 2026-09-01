@@ -1,10 +1,6 @@
 # You Don't Know JS Yet: Objects & Classes - 2nd Edition
 # Chapter 4: This Works
 
-| NOTE: |
-| :--- |
-| Work in progress |
-
 We've seen the `this` keyword used quite a bit so far, but haven't really dug in to understand exactly how it works in JS. It's time we do so.
 
 But to properly understand `this` in JS, you need to set aside any preconceptions you may have, especially assumptions from how `this` works in other programming languages you may have experience in.

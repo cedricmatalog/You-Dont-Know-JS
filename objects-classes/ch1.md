@@ -1,10 +1,6 @@
 # You Don't Know JS Yet: Objects & Classes - 2nd Edition
 # Chapter 1: Object Foundations
 
-| NOTE: |
-| :--- |
-| Work in progress |
-
 > Everything in JS is an object.
 
 This is one of the most pervasive, but most incorrect, "facts" that perpetually circulates about JS. Let the myth busting commence.

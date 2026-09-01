@@ -1,10 +1,6 @@
 # You Don't Know JS Yet: Objects & Classes - 2nd Edition
 # Chapter 2: How Objects Work
 
-| NOTE: |
-| :--- |
-| Work in progress |
-
 Objects are not just containers for multiple values, though clearly that's the context for most interactions with objects.
 
 To fully understand the object mechanism in JS, and get the most out of using objects in our programs, we need to look more closely at a number of characteristics of objects (and their properties) which can affect their behavior when interacting with them.
@@ -252,17 +248,249 @@ In non-strict-mode, an assignment that creates a new property will silently fail
 
 ### Sealed
 
-// TODO
+Sealing an object is a stronger lock-down than merely preventing extensions. `Object.seal(..)` both shuts off extensibility *and* marks all existing properties as non-configurable:
+
+```js
+myObj = {
+    favoriteNumber: 42
+};
+
+Object.seal(myObj);
+
+myObj.nicknames = [ "getify", "ydkjs" ];   // fails
+myObj.favoriteNumber = 123;                // works fine
+delete myObj.favoriteNumber;               // fails
+```
+
+You can still reassign the values of existing writable properties. What you cannot do is add new properties, delete existing ones, or reconfigure their descriptors (for example, flipping `writable` or `enumerable`).
+
+Under the covers, sealing is essentially:
+
+```js
+Object.preventExtensions(myObj);
+
+for (let key of Reflect.ownKeys(myObj)) {
+    let desc = Object.getOwnPropertyDescriptor(myObj,key);
+    if (desc.configurable) {
+        desc.configurable = false;
+        Object.defineProperty(myObj,key,desc);
+    }
+}
+```
+
+`Object.isSealed(myObj)` reports whether an object is in this state. A sealed object is also non-extensible, so `Object.isExtensible(myObj)` will be `false`.
+
+| NOTE: |
+| :--- |
+| Sealing (and freezing, next) only affect the object you pass in. Nested objects held as property values are not automatically sealed. If you need a deeply sealed structure, you have to walk the object graph yourself. |
 
 ### Frozen
 
-// TODO
+Freezing is the strongest of the three object-wide characteristics. `Object.freeze(..)` seals the object *and* marks all existing data properties as non-writable:
+
+```js
+myObj = {
+    favoriteNumber: 42
+};
+
+Object.freeze(myObj);
+
+myObj.favoriteNumber = 123;                // fails
+myObj.nicknames = [ "getify" ];            // fails
+delete myObj.favoriteNumber;               // fails
+```
+
+A frozen object is a shallowly immutable snapshot of its own properties: no additions, no deletions, no reconfigurations, and no reassignments of data properties. Accessor properties (getters/setters) can still run -- their *descriptors* are locked, but a setter, if present, can still have side effects when invoked.
+
+```js
+Object.isFrozen(myObj);                    // true
+Object.isSealed(myObj);                    // true
+Object.isExtensible(myObj);                // false
+```
+
+As with sealing, freezing is shallow. If a frozen object's property holds another object, *that* object is not frozen unless you freeze it separately.
+
+| WARNING: |
+| :--- |
+| `const` does **not** freeze an object. `const` only prevents reassignment of the *binding*. The object value itself remains mutable unless you `Object.freeze(..)` it. This is one of the most common mix-ups I see when developers reach for `const` expecting immutability. |
+
+If you want a convenient mental ranking of these object-wide locks:
+
+1. extensible (the default): anything goes
+2. non-extensible (`Object.preventExtensions(..)`): no new properties
+3. sealed (`Object.seal(..)`): no new properties, no deleting, no reconfiguring
+4. frozen (`Object.freeze(..)`): all of the above, plus no reassigning data properties
 
 ## Extending The MOP
 
 As mentioned at the start of this chapter, objects in JS behave according to a set of rules referred to as the Metaobject Protocol (MOP)[^mop]. Now that we understand more fully how objects work by default, we want to turn our attention to how we can hook into some of these default behaviors and override/customize them.
 
-// TODO
+There are two main extension points: well-known symbols, which let an object customize specific built-in algorithms, and `Proxy`, which lets you intercept the fundamental operations the engine performs on an object.
+
+### Well-Known Symbols
+
+JS pre-defines a set of symbol values on the `Symbol` function object. These *well-known symbols* are hooks into built-in behaviors. If you define a property on an object using one of these symbols as the key, you're customizing how that object participates in some language operation.
+
+A few of the most important:
+
+```js
+myObj = {
+    [Symbol.toStringTag]: "Point",
+
+    [Symbol.toPrimitive](hint) {
+        if (hint == "number") {
+            return this.x;
+        }
+        return `Point(${this.x},${this.y})`;
+    },
+
+    x: 3,
+    y: 4
+};
+
+String(myObj);                 // "Point(3,4)"
+Number(myObj);                 // 3
+Object.prototype.toString.call(myObj);
+// "[object Point]"
+```
+
+`Symbol.toStringTag` customizes the default `Object.prototype.toString()` result -- that's the `"[object Point]"` you saw in the Chapter 3 class example. `Symbol.toPrimitive` customizes how the object is coerced to a primitive (covered in depth in the *Types & Grammar* book).
+
+Other well-known symbols you'll encounter throughout JS:
+
+* `Symbol.iterator` / `Symbol.asyncIterator`: make an object iterable (`for..of`, spread, etc). We'll come back to iteration in *Sync & Async*.
+* `Symbol.hasInstance`: customize the behavior of `instanceof`.
+* `Symbol.species`: let a class control what constructor derived methods (like `Array.prototype.map(..)`) use when creating a new instance.
+* `Symbol.isConcatSpreadable`: control whether `Array.prototype.concat(..)` flattens this object.
+* `Symbol.toStringTag`: as shown above.
+* `Symbol.toPrimitive`: as shown above.
+* `Symbol.match` / `Symbol.replace` / `Symbol.search` / `Symbol.split`: customize how an object participates in `String` methods like `.match(..)`, `.replace(..)`, etc.
+
+```js
+class FancyArray extends Array {
+    static get [Symbol.species]() {
+        return Array;
+    }
+}
+
+var fancy = new FancyArray(1,2,3);
+
+mapped = fancy.map(v => v * 2);
+
+mapped instanceof FancyArray;     // false
+mapped instanceof Array;          // true
+```
+
+By defining `Symbol.species` as `Array`, `map(..)` creates a regular array instead of another `FancyArray`. That's a MOP hook: you're intercepting a built-in algorithm's "what constructor should I use?" question.
+
+| NOTE: |
+| :--- |
+| Well-known symbols are not "magic" in the sense of being invisible. They're just ordinary properties whose keys happen to be the well-known symbol values. `Object.getOwnPropertySymbols(..)` will list them. They *are* typically non-enumerable when defined via `class` fields or `Object.defineProperty(..)`, which is why `for..in` and `Object.keys(..)` skip them. |
+
+### Proxies
+
+Well-known symbols customize *specific* built-in algorithms. `Proxy` customizes the *generic* operations the engine performs against an object: getting a property, setting a property, calling a function, enumerating keys, and so on.
+
+A proxy is an object that wraps another object (the *target*) and optionally intercepts operations via *traps*:
+
+```js
+target = {
+    favoriteNumber: 42
+};
+
+handler = {
+    get(target,key,receiver) {
+        console.log(`getting ${ String(key) }`);
+        return Reflect.get(target,key,receiver);
+    },
+    set(target,key,val,receiver) {
+        console.log(`setting ${ String(key) } = ${ val }`);
+        return Reflect.set(target,key,val,receiver);
+    }
+};
+
+myObj = new Proxy(target,handler);
+
+myObj.favoriteNumber;
+// getting favoriteNumber
+// 42
+
+myObj.favoriteNumber = 123;
+// setting favoriteNumber = 123
+```
+
+The `handler` object lists only the traps you want to intercept. Any operation you don't trap is forwarded to the target automatically.
+
+`Reflect` is the companion to `Proxy`. Each proxy trap has a same-named function on `Reflect` that performs the *default* MOP behavior for that operation. That's why the snippet above uses `Reflect.get(..)` and `Reflect.set(..)` inside the traps: we're intercepting to log, then asking the engine to do the normal thing.
+
+| WARNING: |
+| :--- |
+| Always pass the `receiver` through to `Reflect.get(..)` / `Reflect.set(..)`. The `receiver` is the object the operation was originally performed against -- which is not necessarily the `target`, especially once `[[Prototype]]` delegation or another proxy is involved. Dropping `receiver` is a classic proxy bug that breaks getters/setters and prototype delegation. |
+
+The available traps correspond to the fundamental MOP operations, including:
+
+* `get`, `set`, `has` (`in`), `deleteProperty` (`delete`)
+* `ownKeys` (`Object.keys(..)`, `Object.getOwnPropertyNames(..)`, etc)
+* `getOwnPropertyDescriptor`, `defineProperty`
+* `getPrototypeOf`, `setPrototypeOf`
+* `isExtensible`, `preventExtensions`
+* `apply` (function call), `construct` (`new`)
+
+```js
+logged = [];
+
+fn = new Proxy(function help(){
+    return 42;
+},{
+    apply(target,thisArg,args) {
+        logged.push([ thisArg, args ]);
+        return Reflect.apply(target,thisArg,args);
+    }
+});
+
+fn(1,2);            // 42
+logged;
+// [ [ undefined, [ 1, 2 ] ] ]
+```
+
+#### Proxy Invariants
+
+You cannot make a proxy do *anything*. The MOP has invariants the engine enforces, so that proxies cannot report contradictory facts about an object. For example, if the target is non-extensible, a proxy cannot claim (via `ownKeys` or `getOwnPropertyDescriptor`) that a new own property exists. If a property is non-configurable and non-writable, a `get` trap cannot return a different value than the target holds.
+
+If you violate an invariant, the engine throws a `TypeError`. That's not optional, and you cannot catch-and-ignore it from inside the trap -- the throw happens *after* your trap returns, as the engine validates the result.
+
+#### Revocable Proxies
+
+`Proxy.revocable(..)` creates a proxy you can shut off later:
+
+```js
+var { proxy: myObj, revoke } = Proxy.revocable(target,handler);
+
+myObj.favoriteNumber;      // 42
+
+revoke();
+
+myObj.favoriteNumber;
+// TypeError: Cannot perform 'get' on a proxy that has
+// been revoked
+```
+
+This is useful for capability-style designs: hand out an object, then later take away access without needing the consumer to cooperate.
+
+#### What Proxies Are (And Aren't) For
+
+Proxies are a meta-programming tool. They're excellent for:
+
+* logging / debugging property access
+* wrapping remote or lazy resources behind a local object API
+* enforcing extra constraints (validation, access control)
+* implementing virtual objects that don't exist as a concrete table of properties
+
+They are **not** a general-purpose feature for everyday application code. A proxy adds both cognitive overhead (readers must understand the traps) and runtime overhead (every operation is now an extra function call). If you find yourself proxying every object in the system, you've probably reached for too big a hammer.
+
+Also keep in mind: `===` identity is preserved for the *proxy*, not the target. `myObj === target` is `false`. That matters for `WeakMap` keys, DOM node identity, and any code that caches objects by reference.
+
+We'll use well-known symbols again in later chapters (and in *Types & Grammar* and *Sync & Async*). Proxies, though, are the deepest MOP extension point JS currently offers: they let you replace the object's operating system, not just a few of its system calls.
 
 ## `[[Prototype]]` Chain
 
@@ -302,7 +530,7 @@ The ability for `myObj.toString` to access the `toString` property even though i
 
 | NOTE: |
 | :--- |
-| I have a lot of frustrations with the usage of the word "inheritance" here -- it should be called "delegation"! --  but that's what most people refer to it as, so we'll begrudgingly comply and use that same terminology for now (albeit under protest, with " quotes). I'll save my objections for an appendix of this book. |
+| I have a lot of frustrations with the usage of the word "inheritance" here -- it should be called "delegation"! --  but that's what most people refer to it as, so we'll begrudgingly comply and use that same terminology for now (albeit under protest, with " quotes). I'll save my objections for [Appendix A](apA.md) of this book. |
 
 `Object.prototype` has several built-in properties and methods, all of which are "inherited" by any object that is `[[Prototype]]`-linked, either directly or indirectly through another object's linkage, to `Object.prototype`.
 
@@ -421,7 +649,7 @@ In other words, you can think of functions themselves as having been "created" b
 
 Properties on objects are internally defined and controlled by a "descriptor" metaobject, which includes attributes such as `value` (the property's present value) and `enumerable` (a boolean controlling whether the property is included in enumerable-only listings of properties/property names).
 
-The way object and their properties work in JS is referred to as the "metaobject protocol" (MOP)[^mop]. We can control the precise behavior of properties via `Object.defineProperty(..)`, as well as object-wide behaviors with `Object.freeze(..)`. But even more powerfully, we can hook into and override certain default behaviors on objects using special pre-defined Symbols.
+The way object and their properties work in JS is referred to as the "metaobject protocol" (MOP)[^mop]. We can control the precise behavior of properties via `Object.defineProperty(..)`, as well as object-wide behaviors with `Object.freeze(..)`. But even more powerfully, we can hook into and override certain default behaviors on objects using well-known Symbols, and intercept the operations themselves with `Proxy` (paired with `Reflect`).
 
 Prototypes are internal linkages between objects that allow property or method access against one object -- if the property/method requested is absent -- to be handled by "delegating" that access lookup to another object. When the delegation involves a method, the context for the method to run in is shared from the initial object to the target object via the `this` keyword.
 

@@ -1,10 +1,6 @@
 # You Don't Know JS Yet: Objects & Classes - 2nd Edition
 # Chapter 3: Classy Objects
 
-| NOTE: |
-| :--- |
-| Work in progress |
-
 The class-design pattern generally entails defining a *type of thing* (class), including data (members) and behaviors (methods), and then creating one or more concrete *instances* of this class definition as actual objects that can interact and perform tasks. Moreover, class-orientation allows declaring a relationship between two or more classes, through what's called "inheritance", to derive new and augmented "subclasses" that mix-n-match and even re-define behaviors.
 
 Prior to ES6 (2015), JS developers mimicked aspects of class-oriented (aka "object-oriented") design using plain functions and objects, along with the `[[Prototype]]` mechanism (as explained in the previous chapter) -- so called "prototypal classes".
@@ -416,7 +412,66 @@ When `anotherPoint.printDoubleX()` is invoked, the inherited `this.getX()` is th
 
 ### Extending Expressions
 
-// TODO: cover `class Foo extends ..` where `..` is an expression, not a class-name
+The `extends` clause is not limited to a class *name*. Whatever sits after `extends` is an **expression**, evaluated at the moment the `class` definition is evaluated, and the result is used as the parent constructor.
+
+That expression can be a class, a function, a computed lookup, a function call... even `null`.
+
+```js
+function mixin(Base) {
+    return class extends Base {
+        mix() {
+            return "mixed";
+        }
+    };
+}
+
+class Point2d {
+    x = 3
+    y = 4
+}
+
+class FancyPoint extends mixin(Point2d) {
+    color = "red"
+}
+
+var point = new FancyPoint();
+
+point.x;               // 3
+point.mix();           // "mixed"
+point instanceof FancyPoint;     // true
+point instanceof Point2d;        // true
+```
+
+`mixin(Point2d)` runs *while the `class FancyPoint` definition is being evaluated*, producing an anonymous subclass of `Point2d`. `FancyPoint` then extends *that* class. This is the standard pattern for composing reusable bits of class behavior without multiple inheritance -- which JS does not have.
+
+Because `extends` takes an expression, you can also compute the parent dynamically:
+
+```js
+class Timestamped extends (DEBUG ? LoggedItem : Item) {
+    createdAt = Date.now()
+}
+```
+
+And you can extend `null` to create a class whose instances are *not* `[[Prototype]]`-linked to `Object.prototype`:
+
+```js
+class Dictionary extends null {
+    constructor() {
+        return Object.create(null);
+    }
+}
+
+var dict = new Dictionary();
+
+dict.toString;
+// undefined  (no inherited Object.prototype.toString)
+```
+
+| WARNING: |
+| :--- |
+| Extending `null` is a special case. A subclass constructor must call `super(..)` unless the class has no constructor *and* is extending `null` -- but even then, constructing the instance is awkward, because there's no parent constructor to allocate the object the usual way. The `return Object.create(null)` approach shown here is the practical workaround. For dictionary objects, `Object.create(null)` (see Chapter 2) is usually clearer than a `class extends null` design. |
+
+The expression after `extends` is evaluated only once, when the class definition runs -- not once per instantiation. If you call a factory there, that factory runs at definition time and must return a constructor (a function or class) that `new` can invoke.
 
 ### Overriding Methods
 
@@ -920,7 +975,7 @@ There's not a particularly great answer here, to be honest. If you have experien
 
 Sadly, not only does JS not have *protected* visibility, it seems (even as useful as it is!) to be unlikely as a JS feature. It's been discussed in great detail for over a decade (before ES6 was even a thing), and there've been multiple proposals for it.
 
-I shouldn't say it will *never* happen, because that's not solid ground to stake on in any software. But it's very unlikely, because it actually betrays the very pillar that `class` is built on. If you are curious, or (more likely) certain that there's just *got to be a way*, I'll cover the incompatibility of *protected* visibility within JS's mechanisms in an appendix.
+I shouldn't say it will *never* happen, because that's not solid ground to stake on in any software. But it's very unlikely, because it actually betrays the very pillar that `class` is built on. If you are curious, or (more likely) certain that there's just *got to be a way*, I'll cover the incompatibility of *protected* visibility within JS's mechanisms in [Appendix B](apB.md).
 
 The point here is, as of now, JS has no *protected* visibility, and it won't any time soon. And *protected* visibility is actually, in practice, way more useful than *private* visibility.
 

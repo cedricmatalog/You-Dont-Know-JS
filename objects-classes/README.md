@@ -1,8 +1,6 @@
 # You Don't Know JS Yet: Objects & Classes - 2nd Edition
 
-| NOTE: |
-| :--- |
-| Work in progress |
+-----
 
 [Table of Contents](toc.md)
 
@@ -13,4 +11,8 @@
 * [Chapter 3: Classy Objects](ch3.md)
 * [Chapter 4: This Works](ch4.md)
 * [Chapter 5: Delegation](ch5.md)
+* [Appendix A: "Inheritance" Objections](apA.md)
+* [Appendix B: Prototypal Classes & Protected Visibility](apB.md)
+* [Appendix C: Practice](apC.md)
 * [Thank You!](thanks.md)
+

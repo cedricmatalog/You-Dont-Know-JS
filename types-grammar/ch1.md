@@ -1,13 +1,19 @@
 # You Don't Know JS Yet: Types & Grammar - 2nd Edition
 # Chapter 1: Primitive Values
 
-| NOTE: |
-| :--- |
-| Work in progress |
-
 In Chapter 1 of the "Objects & Classes" book of this series, we confronted the common misconception that "everything in JS is an object". We now circle back to that topic, and again dispel that myth.
 
 Here, we'll look at the core value types of JS, specifically the non-object types called *primitives*.
+
+## About This Book
+
+Welcome to book 4 in the *You Don't Know JS Yet* series! If you already finished *Get Started*, *Scope & Closures*, and *Objects & Classes*, you're in the right spot. If not, I encourage you to build those three foundations first. This book assumes they mean something precise to you.
+
+*Get Started* named the third pillar: types and coercion. This is that pillar, plus the grammar that makes coercions *happen* -- `if (x)`, `x + y`, `x == y`, ASI, `typeof`, destructuring. The first edition of this material lived in *Types & Grammar* too; this second-edition text is a rewrite for a language that grew `bigint`, `symbol`, `??`, `?.`, and then watched Records/Tuples withdraw.
+
+Take your time. Chapters 1 and 2 look like a tour of primitives until you meet `-0`, `NaN`, and string indexes. Chapter 4 will pick a fight with some of your linters. Chapter 5 will pick a fight with some of your style guides. That's the point.
+
+Asynchrony (*Sync & Async*) is not a fourth type. It's the clock these values move on. New syntax (*ES.Next & Beyond*) still coerces. Stay here until `typeof` and `==` feel like tools, not folklore.
 
 ## Value Types
 

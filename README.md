@@ -16,11 +16,12 @@ I recommend reading the **second edition** books in this order:
 
 * [Get Started](get-started/README.md) | [Buy on Leanpub](https://leanpub.com/ydkjsy-get-started) | [Buy on Amazon](https://www.amazon.com/dp/B084BNMN7T)
 * [Scope & Closures](scope-closures/README.md) | [Buy on Leanpub](https://leanpub.com/ydkjsy-scope-closures) | [Buy on Amazon](https://www.amazon.com/dp/B08634PZ3N)
-* "The Unbooks" (ebook) | [Buy on Leanpub](https://leanpub.com/ydkjsy-unbooks) | [Buy on Amazon](https://www.amazon.com/dp/B0F7H1DN5S)
-    - [Objects & Classes](objects-classes/README.md) (draft stable)
-    - [Types & Grammar](types-grammar/README.md) (rough draft)
-    - ~~Sync & Async (canceled)~~
-    - ~~ES.Next & Beyond (canceled)~~
+* [Objects & Classes](objects-classes/README.md)
+* [Types & Grammar](types-grammar/README.md)
+* [Sync & Async](sync-async/README.md)
+* [ES.Next & Beyond](es-next-beyond/README.md)
+
+Books 3 and 4 are also collected as **"The Unbooks"** ebook: [Buy on Leanpub](https://leanpub.com/ydkjsy-unbooks) | [Buy on Amazon](https://www.amazon.com/dp/B0F7H1DN5S)
 
 If you're looking for the previous **first edition** books, [they can be found here](https://github.com/getify/You-Dont-Know-JS/blob/1st-ed/README.md).
 
@@ -60,6 +61,6 @@ I want to extend a warm and deep thanks to Marc Grabanski and the entire Fronten
 
 ## License & Copyright
 
-The materials herein are all &copy; 2019-2025 Kyle Simpson.
+The materials herein are all &copy; 2019-2026 Kyle Simpson.
 
 <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-nd/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NonCommercial-NoDerivs 4.0 Unported License</a>.
