@@ -137,7 +137,7 @@ isNaN("foo");                // true  -- coerces first; trap
 Object.is(0,-0);             // false
 ```
 
-`Object.is` is SameValue. `===` is SameValueX with `-0`/`0` collapsing and `NaN` unequal to itself. IEEE-754 is why. `1 / -0` is `-Infinity`. If you draw a chart and the sign of zero matters, `Object.is`. If you don't, `===` is fine and `-0` will almost never be your bug -- until it is, in a canvas or a wasm boundary.
+`Object.is` is SameValue. `===` is **IsStrictlyEqual**: it collapses `-0`/`0` and treats `NaN` as unequal to itself. **SameValueZero** (what `Map` / `includes` use) collapses `-0`/`0` but treats `NaN` as equal to `NaN`. IEEE-754 is why. `1 / -0` is `-Infinity`. If you draw a chart and the sign of zero matters, `Object.is`. If you don't, `===` is fine and `-0` will almost never be your bug -- until it is, in a canvas or a wasm boundary.
 
 ## `parseInt` Is Not ToNumber
 
@@ -295,7 +295,8 @@ else if (typeof port != "number") {
 
 That's `== null` as the *one* coercive check I still like, sitting next to `??`. Both refuse to treat `0` as missing. `||` does not.
 
-WARNING:
-`document.all` is a host compatibility fossil, not a pattern. If your feature detect looks possessed, you found a spec appendix, not a tool.
+| WARNING: |
+| :--- |
+| `document.all` is a host compatibility fossil, not a pattern. If your feature detect looks possessed, you found a spec appendix, not a tool. |
 
 Back to Appendix B for practice. Then write some ugly, parenthesized, obvious code on purpose. That's the grain of this book.

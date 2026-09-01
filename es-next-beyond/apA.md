@@ -249,8 +249,9 @@ Fill the card **before** you argue about style.
 
 Four lines of source. Four different rows. That's why Appendix A exists as a *page*, not a vibe. The coworker thought they shipped "ES.Next." They shipped one baseline feature, one polyfillable method, one polyfillable namespace, and one dialect. Your job is to split the PR.
 
-NOTE:
-If `grouped` keys look like `"[object Object]"`, you didn't fail Temporal. You failed Chapter 3. The card would still have said "method, cheap." Cheap features still have types.
+| NOTE: |
+| :--- |
+| If `grouped` keys look like `"[object Object]"`, you didn't fail Temporal. You failed Chapter 3. The card would still have said "method, cheap." Cheap features still have types. |
 
 ## What "Delete The Plugin" Looks Like
 
@@ -285,16 +286,3 @@ typeof Temporal == "object";
 ```
 
 That's the appendix as a checklist. Chapter 1 asked you to fill a card once. This page asks you to fill it every June.
-
-NOTE:
-"ES Stage 3" is not a yearly snapshot. Stage is proposal maturity. ES2026 is a snapshot of *finished* features. Mixing the words is how a stage-3 blog becomes "we upgraded to ES2026 X" in standup. Say the stage or say the year. Don't say "ES.Next 3."
-
-caniuse answers "do users' engines have this method?" test262 answers "does this engine implement the spec corners?" A polyfill can make caniuse-shaped code run and still fail a Temporal overflow test. Classroom `?.` can live on caniuse. Production Temporal wants both -- or a polyfill that cites test262. That's the last row of the kinds list wearing QA.
-
-A Babel plugin for stage-2 syntax is a dialect your repo speaks. Budget the deletion the day you add it. If you cannot name the deletion date, you are not adopting a proposal. You are forking the language. Methods you polyfill. Syntax you wait-or-transpile-with-a-date. That's the kinds list as a hiring question.
-
-groupBy shipped. Records died. Two movies. Classify the next blog post before you paste the snippet. If you cannot, re-read "Kinds Of Change, One Page." That's the appendix's fail-closed test.
-
-Six rows. A card. A June ritual. If a coworker pastes a stage-2 snippet into `printSummary`, you now have a page to send instead of a vibe. That's exploring. Appendix B is practicing the same judgment with code.
-
-The kinds list is also a code-review comment: "which row is this?" If the author cannot answer, the snippet does not land. That's the grain of this book wearing a checklist.

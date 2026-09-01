@@ -21,7 +21,7 @@
         * Extensible
         * Sealed
         * Frozen
-    * Extending the MOP
+    * Extending The MOP
         * Well-Known Symbols
         * Proxies
     * `[[Prototype]]` Chain
@@ -59,10 +59,6 @@
     * Mixins Are Copying On Purpose
     * Private Fields Do Not Walk
     * `constructor` Is A Property, Not Magic
-    * `super` Is A Link, Not A Copy Of Me
-    * Two Graphs For One Classroom
-    * `Object.create(null)` Is A Dictionary, Not A Broken Object
-    * Live Link, Walked Once More
 * Appendix B: Prototypal Classes & Protected Visibility
     * Prototypal Classes
     * Protected Visibility
@@ -71,7 +67,6 @@
     * `new.target` And The Forgotten `new`
     * `super()` Before `this`
     * Readable Desugar
-    * `new.target` And The Missing `new`
 * Appendix C: Practice
     * Dictionary, Not A Prototype Soup
     * Delegation, Not A Class Tree

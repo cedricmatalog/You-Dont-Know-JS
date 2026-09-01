@@ -5,7 +5,7 @@ Asynchrony is about *later*. Iteration is about *the next one*. JS connects thos
 
 This chapter is the protocol and the syntax. Chapter 5 is the sugar. If you skip this chapter, `async function` will remain magic, and magic is how you misuse `await` in `forEach`. Stay here.
 
-We'll keep using students. This time the sequence is *a list of IDs we pull one at a time* -- iteration -- and then we'll pause that sequence for promises.
+We'll keep using students. `fetchStudent` is still Chapter 3's promise helper -- same roster as Chapter 1 (73 is Suzy, 14 is Kyle) -- now a thenable instead of a callback. This time the sequence is *a list of IDs we pull one at a time* -- iteration -- and then we'll pause that sequence for promises.
 
 ## The Iterator Protocol
 
@@ -328,7 +328,7 @@ run(loadClassroom,[ 73, 14 ]);
 4. `"Suzy"` becomes the result of `yield`. `student` is Suzy. `console.log` runs *now* inside the generator. The `for` loops. `yield fetchStudent(14)` pauses again.
 5. Same story for Kyle. Then the generator finishes. `run`'s promise fulfills.
 
-If you `yield` *nothing* -- `yield;` or forget `yield` and just `fetchStudent(id)` -- `run` will `.next` immediately with `undefined` (or never wait). The fetches still start (if you called them), but the generator won't wait. That's the generator mistake `await` makes a syntax error... except people then `items.forEach(async ...)` and get the same bug in nicer clothes.
+If you `yield` *nothing* -- `yield;` or forget `yield` and just `fetchStudent(id)` -- `run` will `.next` immediately with `undefined` (or never wait). Forgetting `await` in an `async` function is **not** a syntax error; the promise starts and you don't wait for it. The fetches still start (if you called them), but the generator won't wait. People then `items.forEach(async ...)` and get the same bug in nicer clothes.
 
 `for..of` on a generator that `yield`s promises does **not** wait for those promises. It pulls `{ value: Promise, done: false }` *now*. `for await..of` is the async iterator protocol. Mixing them up is how you log a room full of pending objects and call it done.
 

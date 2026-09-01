@@ -66,18 +66,15 @@
         * Convert At The Edge
     * Walk `scheduleMeeting` Across A Spring-Forward
 * Chapter 5: The Horizon
-    * Pipeline Operator
-    * Pattern Matching
-    * Composites
-    * Decorators
-    * Explicit Resource Management
+    * Pipeline Operator (`|>`) -- Stage 2
+    * Pattern Matching -- Stage 1
+    * Composites -- Stage 1 (Successor To Records/Tuples)
+    * Decorators -- Stage 3 (Check Current)
+    * Explicit Resource Management (`using` / `await using`)
     * More Module Graph
     * Wasm, Hosts, And "Is This Even JS?"
     * How To Watch Without Drowning
     * You Still Don't Know JS *Yet*
-        * See The Wait
-        * Decorators Are A Compiler Tax
-    * Five Tonight Snippets, Not Five Plugins
 * Appendix A: Exploring Further
     * There Is Still One JS
     * Polyfill vs Transpile vs Wait

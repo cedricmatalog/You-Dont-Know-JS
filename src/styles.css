@@ -563,7 +563,7 @@ a:hover {
 	margin-bottom: 0.35rem;
 }
 
-.rail-item > a {
+.rail-item > .rail-chapter {
 	display: grid;
 	grid-template-columns: 0.8rem 1fr;
 	gap: 0.55rem;
@@ -574,25 +574,51 @@ a:hover {
 	padding: 0.28rem 0;
 }
 
-.rail-item.is-active > a {
+.rail-item.is-active > .rail-chapter {
 	font-weight: 700;
 }
 
 .rail-h {
 	display: block;
-	margin: 0.12rem 0 0.12rem 1.35rem;
+	margin: 0 0 0 1.35rem;
+	padding: 0.28rem 0.2rem 0.28rem 0;
 	color: var(--muted);
 	text-decoration: none;
-	font-size: 0.78rem;
-	line-height: 1.35;
+	font-size: 0.8rem;
+	line-height: 1.45;
+	overflow-wrap: break-word;
+}
+
+.rail-h2 {
+	margin-top: 0.7rem;
+	padding-top: 0.42rem;
+	font-size: 0.84rem;
+	line-height: 1.4;
+	color: color-mix(in srgb, var(--ink) 58%, var(--muted));
+}
+
+.rail-chapter + .rail-h2 {
+	margin-top: 0.38rem;
+	padding-top: 0.28rem;
 }
 
 .rail-h3 {
 	margin-left: 1.85rem;
+	padding-top: 0.22rem;
+	padding-bottom: 0.22rem;
+	font-size: 0.76rem;
 }
 
 .rail-h4 {
 	margin-left: 2.3rem;
+	padding-top: 0.18rem;
+	padding-bottom: 0.18rem;
+	font-size: 0.74rem;
+}
+
+.rail-h:hover,
+.rail-h:focus-visible {
+	color: var(--ink);
 }
 
 .rail-toggle {
@@ -1010,6 +1036,15 @@ a:hover {
 		padding-top: max(1.2rem, env(safe-area-inset-top));
 		padding-bottom: max(2rem, env(safe-area-inset-bottom));
 		padding-left: max(1.2rem, env(safe-area-inset-left));
+	}
+
+	.rail-h {
+		padding-top: 0.4rem;
+		padding-bottom: 0.4rem;
+	}
+
+	.rail-h2 {
+		margin-top: 0.82rem;
 	}
 
 	html.rail-open,

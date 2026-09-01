@@ -10,3 +10,6 @@ JS already has types. They live on values, not on variables. JS already has coer
 If you came here hoping for a blessing to never think about `==` again, you will be disappointed. If you came here hoping to finally own the third pillar of the language -- the one *Get Started* warned you not to skip -- you're in the right place.
 
 Take it slowly. The earlier chapters on primitives look "basic" until they aren't. The coercion chapter will pick a fight with some of your tools. The grammar chapter will pick a fight with some of your style guides. That's the point. You don't know JS yet. But you can.
+
+Kyle Simpson<br>
+Author, *You Don't Know JS Yet*

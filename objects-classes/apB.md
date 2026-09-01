@@ -270,39 +270,3 @@ Protected stays a userland WeakMap or a public field. `#` stays per-class-body. 
 If you can desugar `class Guest extends Student` on a whiteboard into two `[[Prototype]]` links, `super()`, and a `this` call site, you don't need to write the old pattern again. You needed to *see* it. That's consistency with Book 2: we showed scope diagrams so `var` wasn't folklore. Here the diagram is objects.
 
 Sketch it once on paper with `Guest` / `Student` / instance. Two arrows up from the instance (to `Guest.prototype`, then `Student.prototype`), one arrow from `Guest` the function to `Student` the function. If you drew one arrow, you missed statics. If you drew copies inside the instance, you missed the book.
-
-## `new.target` And The Missing `new`
-
-```js
-function Student(name) {
-    if (new.target == undefined) {
-        throw new TypeError("Student() requires new");
-    }
-    this.name = name;
-}
-
-class Guest {
-    constructor(name) {
-        this.name = name;
-    }
-}
-
-Student("Kyle");             // TypeError (we threw)
-Guest("Suzy");               // TypeError (the language threw)
-```
-
-`class` constructors refuse a call without `new`. The 2014 `function` form does not, unless you check `new.target` (or `this instanceof Student`, which lies across realms and with `Object.create`). Protected `x` on a shared `Student.prototype` is a *different* bug: one slot for every instance. Statics walk `Guest` → `Student`, not `Guest.prototype` → `Student.prototype`. Four leftovers: desugar, `new.target`, shared prototype data, parallel static chain.
-
-Then Appendix C. Don't skip the dictionary exercise because it looks small. `"toString"` as a key is the whole object-as-map lesson from Chapter 2, which is the whole reason this book exists next to *Get Started*'s third pillar setup.
-
-`super()` before `this` in a subclass constructor is the language refusing to let you read an uninitialized instance. The 2014 pattern had the same rule as folklore: call the parent constructor first. `class` made it a `ReferenceError`. That's not a new object model. That's the old model with a seatbelt.
-
-```js
-class Guest extends Student {
-    constructor(name) {
-        // this.tag = "guest";  // ReferenceError -- super() first
-        super(name);
-        this.tag = "guest";
-    }
-}
-```

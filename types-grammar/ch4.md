@@ -211,7 +211,7 @@ ToNumber(Symbol("42"));             // TypeError exception thrown
 
 #### Other Abstract Numeric Conversions
 
-In addition to `ToNumber()`, the specification defines `ToNumeric()`, which activates `ToPrimitive()` on a value, then conditionally delegates to `ToNumber()` if the value is *not* already a `bigint` value-type.
+In addition to `ToNumber()`, the specification defines `ToNumeric()`[^ToNumeric], which activates `ToPrimitive()` on a value, then conditionally delegates to `ToNumber()` if the value is *not* already a `bigint` value-type.
 
 There are also a wide variety of abstract operations related to converting values to very specific subsets of the general `number` type:
 
@@ -968,7 +968,7 @@ Number(fortyOne);               // 41
 fortyOne + 1;                   // 42
 ```
 
-The object wrappers `hello` and `fortyOne` above have `toString()` and `valueOf()` methods configured on them, to behave similarly to the `spyObject` / etc objects from our previous examples.
+Boxed primitives come from the `String`[^StringConstructor] and `Number`[^NumberConstructor] constructors used with `new`. The object wrappers `hello` and `fortyOne` above have `toString()` and `valueOf()` methods configured on them, to behave similarly to the `spyObject` / etc objects from our previous examples.
 
 A special case to be careful of with wrapped-object primitives is with `Boolean()`:
 
@@ -1854,6 +1854,8 @@ But we haven't fully covered the context in which the type system operates. For 
 [^CrockfordIfs]: "json2.js", Github; Apr 21 2018; https://github.com/douglascrockford/JSON-js/blob/8e8b0407e475e35942f7e9461dab81929fcc7321/json2.js#L336 ; Accessed August 2022
 
 [^BrendanToString]: ESDiscuss mailing list; Aug 26 2014; https://esdiscuss.org/topic/string-symbol#content-15 ; Accessed August 2022
+
+[^ObjectValue]: "6.1.7 The Object Type", ECMAScript 2022 Language Specification; https://262.ecma-international.org/13.0/#sec-object-type ; Accessed August 2022
 
 [^AbstractOperations]: "7.1 Type Conversion", ECMAScript 2022 Language Specification; https://262.ecma-international.org/13.0/#sec-type-conversion ; Accessed August 2022
 

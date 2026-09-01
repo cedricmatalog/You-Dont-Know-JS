@@ -254,7 +254,7 @@ function railHtml(loc, headings) {
 							: "";
 						return `
 							<div class="rail-item ${active ? "is-active" : ""}">
-								<a href="#/${book.id}/${item.id}">
+								<a class="rail-chapter" href="#/${book.id}/${item.id}">
 									<span class="marble ${state.done ? "is-done" : ""} ${active ? "is-here" : ""}"></span>
 									<span>
 										<small>${esc(chapterLabel(item))}</small>

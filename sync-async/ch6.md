@@ -74,7 +74,7 @@ async function highlightNames(names,el) {
 }
 ```
 
-Call `highlightNames(classroom, textarea)` from a click handler. *Now:* the `for` starts, fifty names go into `textContent`, `i % 50 == 49` is true, we `await` a rAF promise. The async function **returns a promise to the click handler** and puts the card down. The click turn ends. The browser can paint those fifty lines. *Later:* a rAF callback resolves the promise, `highlightNames` resumes as a job (before the next paint, actually -- rAF timing is "before paint," and the continuation is a microtask from that resolve). Another fifty names. Card down. Paint. Repeat.
+Call `highlightNames(classroom, textarea)` from a click handler. *Now:* the `for` starts, fifty names go into `textContent`, `i % 50 == 49` is true, we `await` a rAF promise. The async function **returns a promise to the click handler** and puts the card down. The click turn ends. The host queues a rAF callback. That callback runs *before paint* and **resolves** the promise, which queues the async continuation as a **microtask**. Microtasks run before that same frame's paint, so the next fifty names are written *before the user sees the first fifty*. Cooperative yielding to rAF still interleaves with the frame's microtask checkpoint; it is not "write, paint, write." If you need the paint to land, yield to a **task** (`setTimeout(0)`, `scheduler.postTask`) after the rAF, or chunk less aggressively and measure.
 
 Without the `await`, 10,000 names is one turn. The textarea's value in memory might update; the user sees a frozen tab until the turn ends. The engine will not insert a yield. Cooperative means *you* wrote `await`.
 

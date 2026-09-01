@@ -466,7 +466,7 @@ JS provides the method `localCompare(..)` on JS strings for this purpose:
 // 1 (or positive number)
 ```
 
-The optional second and third arguments to `localeCompare(..)` control which locale to use, via the `Intl.Collator` API[^INTLCollatorApi], as covered earlier.
+The optional second and third arguments to `localeCompare(..)` control which locale to use, via the `Intl.Collator` API[^INTLCollator], as covered earlier.
 
 You might use `localeCompare(..)` when sorting an array of strings:
 

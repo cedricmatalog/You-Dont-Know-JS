@@ -4,7 +4,7 @@
 
 [Table of Contents](toc.md)
 
-* [Foreword](foreword.md)
+* [Foreword](foreword.md) (by Kyle Simpson)
 * [Preface](../preface.md)
 * [Chapter 1: The Moving Target](ch1.md)
 * [Chapter 2: Syntax We've Absorbed](ch2.md)

@@ -63,7 +63,7 @@ address.isPrototypeOf({});                  // false
 
 ## Fundamental Objects
 
-JS defines several *fundamental* object types, which are instances of various built-in constructors, including:
+JS defines several *fundamental* object types[^FundamentalObjects], which are instances of various built-in constructors, including:
 
 * `new String()`
 * `new Number()`
@@ -149,9 +149,9 @@ A subjective question to consider: is *auto-boxing* a form of coercion? I say it
 2. Property access `.toUpperCase` requires an object. The engine ToObject's the string: a temporary `String` instance, `[[Prototype]]`-linked to `String.prototype`.
 3. `toUpperCase` is found on that prototype (or further up). It is called with `this` bound to the wrapper (implementations may optimize the wrapper away as long as you can't tell).
 4. The method reads the primitive string out of the wrapper, builds `"KYLE"`, returns it.
-5. The wrapper is thrown away. You cannot stash it. `("Kyle").foo = 1; ("Kyle").foo` is `undefined` -- each access boxes again.
+5. The wrapper is thrown away. You cannot stash it. `("Kyle").foo = 1` **throws** `TypeError` in strict mode (this series assumes strict). In sloppy mode the assignment appears to succeed and still doesn't persist: `("Kyle").foo` is `undefined` -- each access boxes again.
 
-That's why assigning properties onto primitives appears to "work" in sloppy non-strict details and still doesn't persist. There is no object to keep. `new String("Kyle")` *is* an object you can stash -- and then `typeof` is `"object"`, `==` vs `"Kyle"` may coerce, and you've invented a second kind of string. Don't.
+There is no object to keep. `new String("Kyle")` *is* an object you can stash -- and then `typeof` is `"object"`, `==` vs `"Kyle"` may coerce, and you've invented a second kind of string. Don't.
 
 ```js
 var boxed = new Boolean(false);
@@ -250,12 +250,14 @@ The same pattern can be constructed with `new RegExp(..)`, which is useful when 
 
 ```js
 domain = "getify.com";
-emailPattern = new RegExp(`[^@]+@${ domain }`);
+emailPattern = new RegExp(
+    `[^@]+@${ domain.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") }`
+);
 ```
 
 | WARNING: |
 | :--- |
-| If you build a `RegExp` from a string, `\\` in the string becomes `\` in the pattern -- you have to double-escape. Literal `/.. /` form does not have that extra layer. Prefer the literal unless the pattern is actually computed. |
+| If you build a `RegExp` from a string, `\\` in the string becomes `\` in the pattern -- you have to double-escape. A `.` in `getify.com` is "any character" unless you escape it. Literal `/../` form does not have that extra layer. Prefer the literal unless the pattern is actually computed. |
 
 A regexp object is `[[Prototype]]`-linked to `RegExp.prototype`, which defines methods such as `test(..)`, `exec(..)`, and (via well-known symbols) the hooks that let a regexp participate in `String` methods like `match(..)`, `replace(..)`, `search(..)`, and `split(..)`.
 
@@ -379,9 +381,9 @@ We'll come back to generators and `async function` as *control-flow* mechanisms 
 
 At the time the first draft of this chapter was written, a stage-2 proposal existed to add *records* and *tuples* -- immutable, primitive-like cousins of plain objects and arrays, spelled `#{ .. }` and `#[ .. ]`, compared with `===` by contents, and usable as `Map` keys.
 
-That proposal was **withdrawn by TC39 in April 2025**. The committee could not reach consensus on adding new primitive types (and a new equality story) to the language. This is worth sitting with: a feature can look inevitable for years and still not ship. "Stage 2" is not a promise.
+That proposal was **withdrawn by TC39 in April 2025**[^RecordsTuplesProposal]. The committee could not reach consensus on adding new primitive types (and a new equality story) to the language. This is worth sitting with: a feature can look inevitable for years and still not ship. "Stage 2" is not a promise.
 
-What replaced the *motivation* -- "I want a structured value I can put in a `Set` / `Map` and compare by contents" -- is still being explored, currently under the name **Composites** (stage 1 at the time of this writing). Composites, as currently sketched, are *objects*, not primitives: shallowly immutable, with a defined equality, aimed at being collection keys. The syntax, equality algorithm, and even whether they intern (so that `===` works by identity of a canonical instance) have already shifted while the proposal has been alive.
+What replaced the *motivation* -- "I want a structured value I can put in a `Set` / `Map` and compare by contents" -- is still being explored, currently under the name **Composites**[^CompositesProposal] (stage 1 at the time of this writing). Composites, as currently sketched, are *objects*, not primitives: shallowly immutable, with a defined equality, aimed at being collection keys. The syntax, equality algorithm, and even whether they intern (so that `===` works by identity of a canonical instance) have already shifted while the proposal has been alive.
 
 ```js
 // proposed sketch -- NOT JS (yet), and likely to change:

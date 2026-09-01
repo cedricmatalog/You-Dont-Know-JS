@@ -189,12 +189,14 @@ printSummary(73);
 // after fetchStudent false
 // student callback false
 
-printSummary(73);
-// student callback false      <-- NOW, before after
-// after fetchStudent true
+setTimeout(function(){
+    printSummary(73);
+    // student callback false      <-- NOW, cache hit, before after
+    // after fetchStudent true
+}, 80);
 ```
 
-The *same function*, two calls, two different orders relative to "after `fetchStudent`." Any code you write after the call that assumes `called` is still `false` is a landmine. That's Zalgo: sometimes now, sometimes later, from one API.
+The *same function*, two calls, two different orders relative to "after `fetchStudent`." The second call has to happen *after* the cache is warm -- a later turn, not back-to-back on the first turn. Any code you write after the call that assumes `called` is still `false` is a landmine. That's Zalgo: sometimes now, sometimes later, from one API.
 
 The fix on the *author* side of `fetchStudent` is boring and correct: always later.
 

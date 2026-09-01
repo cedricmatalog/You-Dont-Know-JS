@@ -64,7 +64,7 @@ export const books = [
 		subtitle: "Values, coercion, and how the parser sees you",
 		blurb: "Primitives versus objects, the real coercion table, and the grammar that makes programs parse.",
 		chapters: [
-			{ id: "foreword", title: "Foreword" },
+			{ id: "foreword", title: "Foreword", by: "Kyle Simpson" },
 			{ id: "preface", title: "Preface" },
 			{ id: "ch1", title: "Primitive Values" },
 			{ id: "ch2", title: "Primitive Behaviors" },
@@ -83,7 +83,7 @@ export const books = [
 		subtitle: "Now, later, and the event loop",
 		blurb: "Callbacks, promises, generators, async/await, and concurrent JS — one loop, many later turns.",
 		chapters: [
-			{ id: "foreword", title: "Foreword" },
+			{ id: "foreword", title: "Foreword", by: "Kyle Simpson" },
 			{ id: "preface", title: "Preface" },
 			{ id: "ch1", title: "Now & Later" },
 			{ id: "ch2", title: "Callbacks" },
@@ -103,7 +103,7 @@ export const books = [
 		subtitle: "The moving target, without drowning",
 		blurb: "How TC39 ships yearly JS, what has already landed, Temporal, and how to watch the horizon.",
 		chapters: [
-			{ id: "foreword", title: "Foreword" },
+			{ id: "foreword", title: "Foreword", by: "Kyle Simpson" },
 			{ id: "preface", title: "Preface" },
 			{ id: "ch1", title: "The Moving Target" },
 			{ id: "ch2", title: "Syntax We've Absorbed" },

@@ -301,7 +301,7 @@ button.addEventListener(
 
 The wrapper restores the *call site*. `bind` fixes `this` on a new function. An arrow *method* on `classroom` would close over the enclosing `this` (not `classroom` at the top level). Concise methods plus a wrapper at the *later* site are the grain.
 
-That's five exercises: dictionary, delegation, protected WeakMap, `this` at the later call site, own keys, plus the `new` and bind drills. Same shape as *Get Started* Appendix B -- try first, then suggested solutions. If yours differs and still honors the object model, good.
+That's seven exercises: dictionary, delegation, protected WeakMap, `this` at the later call site, own keys, the `new` drill, and the bind drill. Same shape as *Get Started* Appendix B -- try first, then suggested solutions. If yours differs and still honors the object model, good.
 
 If `makeDict` still inherits `toString` as a method, you didn't `Object.create(null)`. If `LabeledCounter` is a `class extends`, you skipped the assignment. If `point.x` is enumerable data, the WeakMap isn't the store. Those three checks are the appendix.
 

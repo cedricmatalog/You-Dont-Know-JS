@@ -285,17 +285,3 @@ byId.get(kyleB.id);          // true -- same primary key
 `WeakSet` of person objects is the first column (identity, GC). `Map` of ids is the second (database). A POJO `signedIn[kyleA] = true` is neither: it ToString's to `"[object Object]"` and collides. Three programs. Pick one on purpose.
 
 Chapter 4 is the big one that `Date` veterans have been waiting a decade for: Temporal, now actually JS.
-
-If you store Suzy's birthday as `new Date("1990-07-07")`, you stored an instant (or a parse surprise) and called it a civil date. `PlainDate` is the type. `Map` keyed by that `Date` is identity of a mutable object plus timezone folklore. That's this chapter colliding with Chapter 4 in one bad line. Don't write that line.
-
-```js
-var birthday = Temporal.PlainDate.from("1990-07-07");
-var whenLogged = Temporal.Now.instant();
-var invite = Temporal.ZonedDateTime.from(
-    "2022-07-07T11:00:00[America/Chicago]"
-);
-```
-
-Three types. Three questions. `Date` was one type pretending to answer all three. Chapter 4 is why the pretence ended. This chapter was which collection you'd hang them on -- `Map` of ids, not `Map` of `Date`s.
-
-Don't `for..in` a `Map`. Don't `JSON.stringify` a `Set` and expect a Set back. Two fail-closed tests next to the birthday walk.

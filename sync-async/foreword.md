@@ -8,3 +8,6 @@ This book is Book 5 of *You Don't Know JS Yet* because time is not a pillar of t
 If you've only ever pasted `async` onto functions until the red squiggles went away, start at Chapter 1 anyway. The event loop is not trivia. It is why `setTimeout(fn, 0)` is not the next line of code, why `try..catch` around `readFile` doesn't catch the callback, and why `await` in `forEach` doesn't wait.
 
 Read with a REPL open. Log `"now"` and `"later"` until the order bores you. Then you're ready for the combinators.
+
+Kyle Simpson<br>
+Author, *You Don't Know JS Yet*

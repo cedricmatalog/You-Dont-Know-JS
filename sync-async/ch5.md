@@ -5,6 +5,8 @@
 
 If Chapter 4 clicked, this chapter is mostly syntax, semantics, and the mistakes the sugar makes easy. If Chapter 4 did *not* click, go back. `await` will feel like a pause button. It is a `.then`. Treating it like a pause button is how you freeze a chain of independent work into a waterfall.
 
+`fetchStudent` and `fetchEnrollments` are still Chapter 3's promise helpers. `await` does not redefine them: 73 is still Suzy, 14 is still Kyle.
+
 ## `printSummary` At Last Looks Like Sync
 
 ```js

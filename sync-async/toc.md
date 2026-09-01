@@ -109,7 +109,6 @@
     * `MessageChannel` As A Task
     * `node:fs` Parse Is Still Now
     * `AbortSignal.timeout`
-    * Walk `fetchStudent` One More Time
 * Appendix B: Practice
     * Predicting The Loop
     * `fetchStudent` Without Zalgo

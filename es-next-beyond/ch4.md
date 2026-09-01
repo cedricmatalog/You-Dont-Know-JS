@@ -52,7 +52,7 @@ zdt.withTimeZone("Europe/Paris");
 
 **`Temporal.Duration`** -- a length of time in mixed units (`{ hours: 1, minutes: 30 }`). Calendar-aware when applied to calendar types; exact when applied to `Instant`.
 
-**`Temporal.TimeZone`** / **`Temporal.Calendar`** -- usually you pass string ids (`"America/Chicago"`, `"iso8601"`, `"hebrew"`) and don't construct these by hand.
+Time zones and calendars are **string ids** (`"America/Chicago"`, `"iso8601"`, `"hebrew"`), not constructable `Temporal.TimeZone` / `Temporal.Calendar` classes. Those classes were removed from the proposal before Stage 4. Pass the id; don't look for a constructor.
 
 ```js
 date = Temporal.PlainDate.from("2022-07-07");
@@ -74,7 +74,7 @@ Temporal values are also **immutable**. `zdt.add({ days: 1 })` returns a *new* `
 `Date` "add one day" culture looks like this:
 
 ```js
-var d = new Date("2022-03-13T08:00:00-06:00"); // Chicago, day DST springs forward
+var d = new Date("2022-03-12T08:00:00-06:00"); // Chicago, morning before DST springs forward
 d.setTime(d.getTime() + 86400000);
 d.toString();
 // maybe 9:00 the next calendar day, maybe not -- depends on local offset
@@ -84,14 +84,15 @@ d.toString();
 
 ```js
 var zdt = Temporal.ZonedDateTime.from(
-    "2022-03-13T08:00:00[America/Chicago]"
+    "2022-03-12T08:00:00[America/Chicago]"
 );
 
 zdt.add({ days: 1 }).toString();
-// 2022-03-14T08:00:00-05:00[America/Chicago]
+// 2022-03-13T08:00:00-05:00[America/Chicago]
 // still 8:00 on the wall -- the offset changed, the clock time didn't
 
 zdt.add({ hours: 24 }).toString();
+// 2022-03-13T09:00:00-05:00[America/Chicago]
 // 24 elapsed hours: 9:00 on the wall after the spring-forward skip
 ```
 
@@ -205,19 +206,21 @@ var fmt = new Intl.DateTimeFormat("en-US", {
     minute: "2-digit"
 });
 
-fmt.format(workshop);
-// "Thursday, July 7, 2022, 11:00 AM"
-
 fmt.format(workshop.toInstant());
-// same instant, still asked to project into Chicago via the formatter's timeZone
+// "Thursday, July 7 at 11:00 AM"
+
+// fmt.format(workshop) throws TypeError
+// Intl will not format a ZonedDateTime: the ZDT already has a
+// zone, and the formatter may have another. Convert to Instant
+// (or PlainDate / PlainDateTime) at the edge.
 ```
 
-Two clocks in that snippet: Temporal's `workshop` already *is* Chicago. Intl's `timeZone` option is a *second* projection. If you pass a `ZonedDateTime` and also set `timeZone: "Europe/Paris"`, you are asking Intl to display the instant in Paris -- which may be what you want for Suzy's UI, and a bug if you thought you were "just localizing the words." Pass `timeZone` to match the *viewer*, or omit it and let the implementation use the zoned value's zone (follow the engine's Temporal+Intl notes -- this pairing is new enough that you should test the actual `format` output).
+Two clocks in that snippet: Temporal's `workshop` already *is* Chicago. Intl's `timeZone` option is a *second* projection of the instant. Pass `timeZone` to match the *viewer*. Don't pass a `ZonedDateTime` and hope the engine picks the ZDT's zone -- it is specified not to.
 
 `formatToParts` is how you style "July" differently from "11:00" without regex on a localized string. The grain from *Types & Grammar*: don't parse what you can keep structured.
 
 ```js
-fmt.formatToParts(workshop).find(function part(p){
+fmt.formatToParts(workshop.toInstant()).find(function part(p){
     return p.type == "weekday";
 }).value;
 // "Thursday"
@@ -257,9 +260,9 @@ var workshop = Temporal.ZonedDateTime.from({
 });
 
 var workshopDate = workshop.toPlainDate();
-var isBirthdayWorkshop =
-    workshopDate.month == suzyBirthday.month &&
-    workshopDate.day == suzyBirthday.day;
+var isBirthdayWorkshop = workshopDate
+    .toPlainMonthDay()
+    .equals(suzyBirthday);
 
 isBirthdayWorkshop;          // true
 
@@ -271,7 +274,7 @@ started.toString();
 
 Stay here.
 
-`suzyBirthday` has no year, no zone, no "when in the universe." You cannot `toInstant()` it. The type **won't let you**. That's not missing API. That's the design.
+`suzyBirthday` has no year, no zone, no "when in the universe." You cannot `toInstant()` it. `PlainMonthDay` also has no `.month` number -- the civil month is `.monthCode` (`"M07"`), because some calendars don't have a single numeric month that matches ISO. Comparing `.month` to a `PlainDate`'s `.month` is `undefined == 7`. Convert with `toPlainMonthDay()` (or compare `.monthCode` and `.day`) so the types agree.
 
 `workshop` is a wall clock in a zone. `toPlainDate()` *drops* time and zone on purpose -- "the calendar day this meeting sits on in its own zone." Comparing that to `PlainMonthDay` is civil-calendar comparison. We did not convert the birthday to UTC midnight. UTC midnight of July 7 is a different civil day in Tokyo.
 
@@ -291,10 +294,21 @@ Temporal.ZonedDateTime.from({
     hour: 2,
     minute: 30
 });
-// RangeError (or disambiguation, depending on options)
+// 2022-03-13T03:30:00-05:00[America/Chicago]
+// default disambiguation is "compatible" -- it slides into existence
+
+Temporal.ZonedDateTime.from({
+    timeZone: "America/Chicago",
+    year: 2022,
+    month: 3,
+    day: 13,
+    hour: 2,
+    minute: 30
+}, { disambiguation: "reject" });
+// RangeError
 ```
 
-`Date` would invent *something* -- usually a shifted wall time -- and smile. Temporal asks you to pass `disambiguation: "reject" | "earlier" | "later" | "compatible"`. Reject is the one I want at a form boundary: "that meeting time doesn't exist, pick another." Compatible is the one APIs use to match `Date`'s old guesses when they must.
+`Date` would invent *something* -- usually a shifted wall time -- and smile. Temporal's default `compatible` is that same family of guess (here, 2:30 becomes 3:30). Pass `disambiguation: "reject" | "earlier" | "later" | "compatible"` on purpose. Reject is the one I want at a form boundary: "that meeting time doesn't exist, pick another." Compatible is the one APIs use to match `Date`'s old guesses when they must.
 
 Fall-back is the opposite bug: 1:30am happens twice. `from` without disambiguation is underspecified. Make it specified.
 
@@ -346,8 +360,11 @@ chicago.toInstant().equals(paris.toInstant());  // true
 chicago.hour;    // 11
 paris.hour;      // 18
 chicago.toPlainDate().equals(paris.toPlainDate());
-// false -- July 7 afternoon in Paris is still July 7,
-// but try a late Chicago evening: the Paris calendar date can be +1
+// true -- both still July 7
+
+var lateChicago = chicago.with({ hour: 22 });
+lateChicago.withTimeZone("Europe/Paris").toPlainDate().toString();
+// "2022-07-08" -- a late Chicago evening is already tomorrow in Paris
 ```
 
 `withTimeZone` does **not** keep 11:00 and move the zone (that would be a different instant -- "11:00 in Paris"). It keeps the instant and *projects* a new wall clock. That's the operation people meant when they called `toLocaleString` on a `Date` and hoped. Here it's typed.
@@ -472,9 +489,10 @@ var start = Temporal.PlainDate.from("2022-07-07");
 var end = Temporal.PlainDate.from("2022-07-10");
 
 start.until(end).toString();          // "P3D"
-start.until(end,{ largestUnit: "hours" });
-// still a date-to-date duration -- hours aren't in the calendar day
-// without a time; you wanted ZonedDateTime/Instant for elapsed hours
+start.until(end, { largestUnit: "hours" });
+// RangeError -- hours are not a PlainDate unit
+// (largestUnit must be day..year). Elapsed hours need
+// ZonedDateTime or Instant.
 ```
 
 `PlainDate.until` is *calendar* distance. Three days. Not 72 hours -- those three days might contain a DST 23-hour day if you had zoned times.
@@ -496,9 +514,10 @@ If you `end.epochMilliseconds - start.epochMilliseconds` you've thrown away the 
 
 ```js
 workshop.until(
-    workshop.add({ hours: 90 }),
+    workshop.add({ minutes: 90 }),
     { largestUnit: "hours" }
 );
+// "PT1H30M"
 ```
 
 Ninety minutes of workshop as a duration you can put in a UI, without building a `Date` and dividing by 3600000.
@@ -581,10 +600,11 @@ var start = zonedOn(
 );
 var end = start.add({ minutes: 90 });
 end.toPlainTime().toString();
-// 03:00 -- not 03:00 plus a mystery, and not 02:00
+// 04:00 -- 01:30 CST plus 90 elapsed minutes is 04:00 CDT
+// (the spring-forward hour never existed)
 ```
 
-You added a `Duration`. You did **not** add 90 * 60 * 1000 to a millis field and hope. The zoned timeline has a missing hour; arithmetic follows the civil rules you asked for (`minutes` on a `ZonedDateTime` is "move this many minutes on the instant timeline" vs calendar `hours` -- read the method you called). If the result surprises you, print `start.toInstant()` and `end.toInstant()` and `until`. That's the lesson: two questions, two methods.
+You added a `Duration`. You did **not** add 90 * 60 * 1000 to a millis field and hope. Minutes (and hours) on a `ZonedDateTime` are **exact** timeline units: 90 minutes of elapsed time. Years, months, weeks, and days are **calendar** units: `{ days: 1 }` keeps 1:30 on the wall the next civil day. If the result surprises you, print `start.toInstant()` and `end.toInstant()` and `until`. Two questions, two kinds of unit.
 
 Fall-back (November) has the opposite problem: 1:30 AM happens twice. `earlier` / `later` / `reject` are again product choices. A log line should have been an `Instant` so it cannot be ambiguous. A wall-clock meeting should be a `ZonedDateTime` with an explicit disambiguation at the *edge* (the form), not in a helper five calls deep.
 

@@ -174,10 +174,12 @@ function foo() {
 }
 // foo() === undefined
 
-// 2 -- `var b = 2[a,b].forEach(...)` is a syntax error
-//      or, with ASI after 2, an array forEach.
-//      Without a semicolon after `2`, `[` continues the
-//      previous statement. Put the semicolon.
+// 2 -- without a semicolon after `2`, `[` continues the
+//      previous statement: `var b = 2[a,b].forEach(...)`.
+//      The comma expression yields `b` (`undefined` from
+//      the `var` hoist), so `2[undefined]` is `undefined`,
+//      and `.forEach` throws TypeError at runtime.
+//      Put the semicolon after `2`.
 
 var a = 1;
 var b = 2;
@@ -227,7 +229,7 @@ Never `new` the fundamental wrappers. Auto-boxing is enough for `"Kyle".length`.
 
 Suggested solution for "Holes And `map`":
 
-The sparse array logs `0 Kyle` and `2 Suzy` -- no `1`. The dense array logs `1 undefined` as well. `map` still returns length 3 (holes preserved in the result on most engines -- check yours). Don't write `new Array(n)` if you meant `n` placeholders you will `map` over; `fill` first or use a literal.
+The sparse array logs `0 Kyle` and `2 Suzy` -- no `1`. The dense array logs `1 undefined` as well. `map` still returns length 3; holes in the result are **specified**, not engine-dependent. Don't write `new Array(n)` if you meant `n` placeholders you will `map` over; `fill` first or use a literal.
 
 Suggested solution for "`==` Or `===`":
 
@@ -296,5 +298,6 @@ typeof null;                 // "object"
 
 ASI, ToPrimitive concat, `typeof` lie. Three more landmines from the drill list. If you only practiced `scheduleMeeting`, you practiced *Get Started* again. This appendix wanted the types *named*.
 
-NOTE:
-`typeof foo == "undefined"` is how you feature-detect a *binding* that might be undeclared. `typeof x == "object"` is not how you feature-detect a POJO -- `null` lies. Two `typeof`s, two jobs. Don't mix them.
+| NOTE: |
+| :--- |
+| `typeof foo == "undefined"` is how you feature-detect a *binding* that might be undeclared. `typeof x == "object"` is not how you feature-detect a POJO -- `null` lies. Two `typeof`s, two jobs. Don't mix them. |

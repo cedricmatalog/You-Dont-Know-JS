@@ -322,11 +322,12 @@ fetchStudent(73, function onStudent(student){
     console.log(currentStudent.name, student.name);
 });
 
-students.shift();
-currentStudent = students[0];
+currentStudent = students[1];
 ```
 
-When `onStudent` runs, `currentStudent` is Kyle, not Suzy. The callback closes over the *binding* `currentStudent` (*Scope & Closures*), whose *value* was reassigned, and over `students`, whose *contents* were mutated. Later code is not later in a vacuum. It's later in a program that kept running.
+When `onStudent` runs, `currentStudent` is Kyle, not Suzy. The callback closes over the *binding* `currentStudent` (*Scope & Closures*), whose *value* was reassigned. Later code is not later in a vacuum. It's later in a program that kept running.
+
+If you also `students.shift()` before the timeout, `fetchStudent`'s later `find` will not see Suzy at all -- `student` is `undefined` and `student.name` throws. Two later-world bugs: the binding moved, and the lookup table moved. This snippet only moves the binding, so you still get `Kyle Suzy`.
 
 This is the async cousin of the closure lesson: a function's scope is preserved, but the *values* in that scope are live. Time makes that liveness visible.
 

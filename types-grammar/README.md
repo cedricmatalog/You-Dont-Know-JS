@@ -4,7 +4,7 @@
 
 [Table of Contents](toc.md)
 
-* [Foreword](foreword.md)
+* [Foreword](foreword.md) (by Kyle Simpson)
 * [Preface](../preface.md)
 * [Chapter 1: Primitive Values](ch1.md)
 * [Chapter 2: Primitive Behaviors](ch2.md)

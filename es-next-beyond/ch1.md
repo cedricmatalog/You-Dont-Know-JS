@@ -215,7 +215,7 @@ The rest of this book is judgment practice: syntax you already have (2), collect
 
 If you came here first because "modern JS" sounded like a shortcut, you've now been told -- several times -- that it isn't. Go back. Come forward again. The moving target only makes sense if the target does.
 
-Kyle, in a workshop, once asked me to "just list the new APIs." I listed Temporal and `groupBy` and pipes in the same breath. He asked which of those he could put in `printSummary` on Monday. Only then did the list split into language, polyfill, and don't. This chapter is that split, written down.
+In a workshop I once asked someone to "just list the new APIs." They listed Temporal and `groupBy` and pipes in the same breath. I asked which of those they could put in `printSummary` on Monday. Only then did the list split into language, polyfill, and don't. This chapter is that split, written down.
 
 If you still want a list, MDN's JavaScript release notes exist. If you want a *habit*, you just read it. Use it.
 

@@ -14,14 +14,24 @@ Don't skim the state machine. Every "promise weirdness" story I hear in workshop
 Chapter 2 left us with a pyramid (or a pile of named functions) that still inverted control. Here's the same program as promises. First, adapters -- the only place we still *need* `new Promise(..)`:
 
 ```js
+var students = [
+    { id: 14, name: "Kyle" },
+    { id: 73, name: "Suzy" },
+    { id: 112, name: "Frank" },
+    { id: 6, name: "Sarah" }
+];
+
 function fetchStudent(studentID) {
     return new Promise(function executor(resolve,reject){
         setTimeout(function(){
-            if (studentID == null) {
+            var student = students.find(function match(s){
+                return s.id == studentID;
+            });
+            if (student == null) {
                 reject(new Error("missing id"));
                 return;
             }
-            resolve({ id: studentID, name: "Suzy" });
+            resolve(student);
         }, 50);
     });
 }
@@ -358,7 +368,7 @@ fetchStudent(73)
     });
 ```
 
-`onSettle` runs on fulfill *or* reject. It does not receive Suzy. The fulfillment still flows to `onStudent` unless `onSettle` throws or returns a rejected promise -- in which case *that* rejection wins. Same rule as `try..finally` in *Types & Grammar*: `finally` can override. Don't `return` a dummy value from `finally` "to be safe." You just ate Suzy.
+`onSettle` runs on fulfill *or* reject. It does not receive Suzy. The fulfillment still flows to `onStudent` unless `onSettle` **throws** or **returns a rejected promise** -- in which case *that* rejection wins. A plain `return "dummy"` from `Promise#finally` is **ignored**; you still get Suzy. That is *not* the same as `try..finally`, where `return` in `finally` overrides the `try` value. Don't throw from `finally` "to be safe." You just ate Suzy.
 
 ### The Explicit Promise Construction Antipattern
 

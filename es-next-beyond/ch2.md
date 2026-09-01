@@ -47,14 +47,15 @@ firstCourse(null);           // "none" -- student itself nullish
 
 `student.enrollment?.courses[0]` without `?.` before `[0]` still throws if `courses` is missing -- optional chaining is not a virus that infects the rest of the line. Each `?.` is its own short-circuit point.
 
-Calls and `new` have the same rule:
+Calls skip the same way. `new` does **not**:
 
 ```js
 record.getName?.();          // skip the call if getName is nullish
-new record.Ctor?.();         // skip `new` if Ctor is nullish
+new record.Ctor();           // SyntaxError if you write `new record.Ctor?.()`
+record.Ctor && new record.Ctor();
 ```
 
-`record.getName()` without `?.` throws if `getName` is missing. `record.getName?.()` returns `undefined`. `record.getName?.() ?? "anon"` is the full "maybe no method, maybe no name" boundary. Six `?.` in a row is still a smell: you don't know the shape.
+`new record.Ctor?.()` is a SyntaxError: optional chaining is not allowed in a `new` expression. Guard the constructor yourself (`record.Ctor && new record.Ctor()`, or `new (record.Ctor ?? DefaultCtor)`). `record.getName()` without `?.` throws if `getName` is missing. `record.getName?.()` returns `undefined`. `record.getName?.() ?? "anon"` is the full "maybe no method, maybe no name" boundary. Six `?.` in a row is still a smell: you don't know the shape.
 
 ## Nullish Defaults
 
@@ -283,19 +284,3 @@ Read the `firstCourse` snippet again until `kyle.enrollment?.courses?.[0]` vs `k
 Walk it once more with Kyle missing `enrollment`, Suzy with an empty `courses`, and a bug where `firstCourse(73)` was called with an id. `?.` saves Kyle and Suzy. It must **not** save `73` -- that's `typeof student == "object"` (and not `null`) before you chain. Syntax is not a type system. It is a shorter `&&` for *nullish* steps you already believed were optional.
 
 Chapter 3 is the built-in *objects and methods* that grew up alongside this syntax: maps, sets, iterators, grouping, and the "why is this not an array" collections.
-
-`import()` is a promise *now* and a module *later* -- Book 5's two worlds, wearing a function. Static `import` is the graph. Don't `import()` a file you could have listed at the top just because dynamic felt modern. That's Chapter 2's last sharp edge next to `?.`: both are shorter spellings of something you already owed a name (`&&` chain, or a later card).
-
-```js
-console.log("now");
-import("./mod.js").then(function(){
-    console.log("later");
-});
-console.log("still now");
-```
-
-If you predicted `later` between the two `now`s, you collapsed worlds -- go back to Book 5 Chapter 1, then return. The syntax is ES.Next. The timing is not.
-
-Spread is a new shell, not a deep clone. `??` is missing, not falsy. Two sentences you can put on a sticky note next to the `import()` snippet.
-
-`kyle.enrollment?.courses?.[0]` vs `kyle.enrollment.courses[0]`: one missing field vs one throw. Sleep on that pair. Then Chapter 3.

@@ -597,10 +597,6 @@ Look back at this chapter's examples and you'll see Chapters 1--4 peeking throug
 
 That's why this book is *Types **&** Grammar*, one title. You don't really know a value until you know the grammar that is about to operate on it. And you don't really know an operator until you know what it does to its operands' types.
 
-If you've made it here, you have the third pillar. The language's values, and the rules for writing them down, are no longer a rumor. They're yours.
-
-The next book, *Sync & Async*, takes these values and this grammar and asks what happens when "now" is not the only time a statement can finish.
-
 ## A Program The Parser Disagrees With You About
 
 Let's slow down and *show the work*, the way *Scope & Closures* colored marbles. Here's a snippet I still see in the wild. Predict what it does. Then we'll parse it.
@@ -610,23 +606,21 @@ function getStudent(id) {
     if (id)
         return
         {
-            id: id,
-            name: "Suzy"
+            id: id
         }
 }
 
 console.log(getStudent(73));
 ```
 
-If you said "logs `{ id: 73, name: "Suzy" }`" you parsed it as an English paragraph. The grammar parsed it as:
+If you said "logs `{ id: 73 }`" you parsed it as an English paragraph. The grammar parsed it as:
 
 ```js
 function getStudent(id) {
     if (id)
         return;          // ASI -- restricted production
     {                    // a BLOCK, not an object
-        id: id,          // a LABEL named id
-        name: "Suzy"     // expression statement (useless)
+        id: id           // a LABEL named id, then the expression `id`
     }
 }
 
@@ -638,6 +632,10 @@ Three grammar facts stacked:
 1. `return` is a restricted production: a newline after `return` inserts `;`.
 2. `{` at statement position is a block, not an object literal.
 3. `id: id` inside a block is a label plus an expression, not a property.
+
+| NOTE: |
+| :--- |
+| A second "property" with a comma -- `{ id: id, name: "Suzy" }` as a *block* -- is a **SyntaxError**, not a silent `undefined`. After the label `id:`, the comma operator cannot take `name: "Suzy"` as an operand. The one-property form is the one that parses and still returns `undefined`. |
 
 The fix is not "never use newlines." The fix is to *know which production you're in*:
 
@@ -657,5 +655,9 @@ Braces on the `if`, object on the same line as `return` (or `return (` then a ne
 That's this whole chapter: folklore ("JS is weird about returns") is almost always an unnamed production. Name it, and the weirdness becomes a rule you can use.
 
 If this example felt cheap, good -- it's famous because it *looks* cheap and still ships bugs. Appendix B has more to practice on.
+
+If you've made it here, you have the third pillar. The language's values, and the rules for writing them down, are no longer a rumor. They're yours.
+
+The next book, *Sync & Async*, takes these values and this grammar and asks what happens when "now" is not the only time a statement can finish.
 
 [^ASI]: "12.10 Automatic Semicolon Insertion", ECMAScript Language Specification; https://262.ecma-international.org/#sec-automatic-semicolon-insertion ; Accessed August 2026
