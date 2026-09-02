@@ -187,7 +187,3 @@ export function readingMinutes(markdown) {
 	const words = markdown.trim().split(/\s+/).filter(Boolean).length;
 	return Math.max(1, Math.round(words / 220));
 }
-
-export function firstReadableChapter(book) {
-	return book.chapters.find((chapter) => chapter.id.startsWith("ch")) ?? book.chapters[0];
-}

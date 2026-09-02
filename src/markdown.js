@@ -69,6 +69,15 @@ function liftFootnotes(markdown) {
 	return `${next}\n\n<section class="footnotes"><h2>Notes</h2><ol>${items}</ol></section>\n`;
 }
 
+function liftIndentedImages(markdown) {
+	const chunks = markdown.split(/(```[\s\S]*?```)/);
+	return chunks
+		.map((chunk, index) =>
+			index % 2 === 1 ? chunk : chunk.replace(/^[ \t]{4,}(<img\b[^>]*>)[ \t]*$/gm, "\n$1\n"),
+		)
+		.join("");
+}
+
 function stripSeriesTitle(markdown) {
 	return markdown.replace(/^# You Don't Know JS Yet[^\n]*\n+/i, "");
 }
@@ -96,6 +105,65 @@ function rewriteInternalHref(href, bookId) {
 	return hash ? `${route}/${slugify(hash)}` : route;
 }
 
+const FIGURE_SIZE = {
+	"es-next-beyond/fig1.svg": [720, 400],
+	"get-started/fig1.png": [1200, 375],
+	"get-started/fig1.svg": [1200, 375],
+	"get-started/fig2.png": [1200, 260],
+	"get-started/fig2.svg": [1200, 260],
+	"get-started/fig3.png": [1200, 270],
+	"get-started/fig3.svg": [1200, 270],
+	"get-started/fig4.png": [470, 970],
+	"get-started/fig4.svg": [470, 970],
+	"get-started/fig5.png": [470, 970],
+	"get-started/fig5.svg": [470, 970],
+	"get-started/fig6.png": [1040, 950],
+	"get-started/fig6.svg": [1040, 950],
+	"objects-classes/fig1.svg": [720, 400],
+	"scope-closures/fig1.png": [1200, 800],
+	"scope-closures/fig2.png": [1030, 1180],
+	"scope-closures/fig3.png": [450, 585],
+	"scope-closures/fig4.png": [1000, 600],
+	"scope-closures/fig5.png": [1000, 875],
+	"sync-async/fig1.svg": [720, 300],
+	"sync-async/fig2.svg": [720, 360],
+	"sync-async/fig3.svg": [720, 280],
+};
+
+function figureFile(src) {
+	return String(src).split("/").pop()?.split("?")[0] ?? "";
+}
+
+function sizeFor(bookId, src) {
+	return FIGURE_SIZE[`${bookId}/${figureFile(src)}`] ?? null;
+}
+
+function decorateImages(html, bookId) {
+	return html.replace(/<img\b([^>]*)>/gi, (full, attrs) => {
+		let next = attrs;
+		const srcMatch = next.match(/\bsrc=["']([^"']+)["']/i);
+		if (!srcMatch?.[1]) return full;
+		let src = srcMatch[1];
+		if (src.startsWith("images/")) {
+			src = `/books/${bookId}/${src}`;
+			next = next.replace(srcMatch[0], `src="${escapeHtml(src)}"`);
+		}
+		next = next.replace(/\s+align=["'][^"']*["']/gi, "");
+		if (!/\bloading=/i.test(next)) next += ` loading="lazy"`;
+		if (!/\bdecoding=/i.test(next)) next += ` decoding="async"`;
+		const size = sizeFor(bookId, src);
+		if (size) {
+			next = /\bwidth=/i.test(next)
+				? next.replace(/\bwidth=["'][^"']*["']/i, `width="${size[0]}"`)
+				: `${next} width="${size[0]}"`;
+			next = /\bheight=/i.test(next)
+				? next.replace(/\bheight=["'][^"']*["']/i, `height="${size[1]}"`)
+				: `${next} height="${size[1]}"`;
+		}
+		return `<img${next}>`;
+	});
+}
+
 function highlight(code, lang) {
 	const language = lang && hljs.getLanguage(lang) ? lang : "javascript";
 	try {
@@ -117,7 +185,7 @@ export function extractHeadings(html) {
 }
 
 export function renderMarkdown(markdown, { bookId, chapterId }) {
-	const prepared = liftFootnotes(liftCallouts(stripSeriesTitle(markdown)));
+	const prepared = liftIndentedImages(liftFootnotes(liftCallouts(stripSeriesTitle(markdown))));
 
 	const parser = new Marked();
 	parser.use({
@@ -148,19 +216,17 @@ export function renderMarkdown(markdown, { bookId, chapterId }) {
 				return `<a href="${escapeHtml(next)}"${titleAttr}${extra}>${inner}</a>`;
 			},
 			image({ href, title, text }) {
-				const src = href?.startsWith("images/") ? `/books/${bookId}/${href}` : href;
+				if (!href) return "";
+				const src = href.startsWith("images/") ? `/books/${bookId}/${href}` : href;
 				const titleAttr = title ? ` title="${escapeHtml(title)}"` : "";
-				return `<img src="${escapeHtml(src)}" alt="${escapeHtml(text)}"${titleAttr} loading="lazy">`;
+				const size = sizeFor(bookId, src);
+				const dims = size ? ` width="${size[0]}" height="${size[1]}"` : "";
+				return `<img src="${escapeHtml(src)}" alt="${escapeHtml(text)}"${titleAttr}${dims} loading="lazy" decoding="async">`;
 			},
 		},
 	});
 
-	const html = parser.parse(prepared, { async: false });
-
-	return html.replace(
-		/(src=["'])images\//g,
-		`$1/books/${bookId}/images/`,
-	);
+	return decorateImages(parser.parse(prepared, { async: false }), bookId);
 }
 
 export function plainText(markdown) {
