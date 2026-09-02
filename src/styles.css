@@ -280,6 +280,9 @@ a:hover {
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
 	color: var(--muted);
+	max-width: 100%;
+	text-wrap: pretty;
+	overflow-wrap: break-word;
 }
 
 .hero h1,
@@ -1177,10 +1180,14 @@ a:hover {
 		display: none;
 	}
 
+	.text-btn {
+		min-width: 0;
+		padding: 0 0.35rem;
+	}
+
 	.topbar-right [data-theme-toggle] {
 		letter-spacing: 0.02em;
-		padding: 0 0.2rem;
-		min-width: 0;
+		padding: 0 0.25rem;
 	}
 
 	.pager {

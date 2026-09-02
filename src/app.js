@@ -78,12 +78,24 @@ function themeLabel(theme) {
 	return "Auto";
 }
 
+function fontStepIndex() {
+	const index = FONT_STEPS.findIndex((step) => Math.abs(step - store.get().fontScale) < 0.01);
+	return index < 0 ? 1 : index;
+}
+
 function cycleFont(dir) {
-	const current = store.get().fontScale;
-	const index = FONT_STEPS.findIndex((step) => Math.abs(step - current) < 0.01);
-	const next = FONT_STEPS[Math.min(FONT_STEPS.length - 1, Math.max(0, (index < 0 ? 1 : index) + dir))];
+	const next = FONT_STEPS[Math.min(FONT_STEPS.length - 1, Math.max(0, fontStepIndex() + dir))];
 	store.setFontScale(next);
 	applyPrefs();
+	syncFontButtons();
+}
+
+function syncFontButtons() {
+	const i = fontStepIndex();
+	const dec = app.querySelector('[data-font="-1"]');
+	const inc = app.querySelector('[data-font="1"]');
+	if (dec) dec.disabled = i <= 0;
+	if (inc) inc.disabled = i >= FONT_STEPS.length - 1;
 }
 
 function iconMenu() {
@@ -96,10 +108,11 @@ function iconSearch() {
 
 function topbar({ title, back, bookId }) {
 	const prefs = store.get();
+	const fontIndex = fontStepIndex();
 	return `
 		<header class="topbar">
 			<div class="topbar-left">
-				${bookId ? `<button class="icon-btn rail-toggle" type="button" data-rail aria-label="Table of contents">${iconMenu()}</button>` : ""}
+				${bookId ? `<button class="icon-btn rail-toggle" type="button" data-rail aria-label="Table of contents" aria-expanded="false" aria-controls="toc-rail">${iconMenu()}</button>` : ""}
 				<a class="brand" href="#/">
 					<span class="brand-mark" aria-hidden="true"></span>
 					<span class="brand-name">YDKJS<span>Yet</span></span>
@@ -107,10 +120,10 @@ function topbar({ title, back, bookId }) {
 			</div>
 			<p class="topbar-title">${esc(title)}</p>
 			<div class="topbar-right">
-				<button class="text-btn" type="button" data-font="-1" aria-label="Decrease type size">A−</button>
-				<button class="text-btn" type="button" data-font="1" aria-label="Increase type size">A+</button>
+				<button class="text-btn" type="button" data-font="-1" aria-label="Decrease type size"${fontIndex <= 0 ? " disabled" : ""}>A−</button>
+				<button class="text-btn" type="button" data-font="1" aria-label="Increase type size"${fontIndex >= FONT_STEPS.length - 1 ? " disabled" : ""}>A+</button>
 				<button class="text-btn" type="button" data-theme-toggle aria-label="Theme: ${themeLabel(prefs.theme)}">${themeLabel(prefs.theme)}</button>
-				<button class="icon-btn" type="button" data-search-open aria-label="Search">${iconSearch()}</button>
+				<button class="icon-btn" type="button" data-search-open aria-label="Search" aria-expanded="false" aria-controls="search-dialog">${iconSearch()}</button>
 			</div>
 		</header>
 		${back ? `<div class="sr-only">${esc(back)}</div>` : ""}
@@ -120,7 +133,7 @@ function topbar({ title, back, bookId }) {
 function searchModal() {
 	return `
 		<div class="search" hidden data-search>
-			<div class="search-panel" role="dialog" aria-modal="true" aria-labelledby="search-label">
+			<div class="search-panel" id="search-dialog" role="dialog" aria-modal="true" aria-labelledby="search-label">
 				<div class="search-bar">
 					<label id="search-label" class="sr-only" for="search-input">Search the books</label>
 					<input id="search-input" type="search" placeholder="Search all six books…" autocomplete="off" />
@@ -238,8 +251,7 @@ async function bookView(bookId) {
 function railHtml(loc, headings) {
 	const { book, chapter } = loc;
 	return `
-		<aside class="rail" data-rail-panel>
-			<p class="rail-kicker">Scope</p>
+		<aside class="rail" id="toc-rail" data-rail-panel>
 			<a class="rail-book" href="#/${book.id}">${esc(book.title)}</a>
 			<nav class="rail-nav" aria-label="Chapters">
 				${book.chapters
@@ -380,10 +392,21 @@ function bindScroll(route) {
 	}
 }
 
+let searchOpener = null;
+
+function searchFocusables(root) {
+	return [...root.querySelectorAll("a[href], button:not([disabled]), input")].filter(
+		(el) => !el.hidden && el.getAttribute("aria-hidden") !== "true",
+	);
+}
+
 function openSearch() {
 	const root = app.querySelector("[data-search]");
 	if (!root) return;
+	searchOpener = document.activeElement;
 	root.hidden = false;
+	document.documentElement.classList.add("search-open");
+	app.querySelector("[data-search-open]")?.setAttribute("aria-expanded", "true");
 	const input = root.querySelector("input");
 	input.focus();
 	input.select();
@@ -391,8 +414,12 @@ function openSearch() {
 
 function closeSearch() {
 	const root = app.querySelector("[data-search]");
-	if (!root) return;
+	if (!root || root.hidden) return;
 	root.hidden = true;
+	document.documentElement.classList.remove("search-open");
+	app.querySelector("[data-search-open]")?.setAttribute("aria-expanded", "false");
+	if (searchOpener && typeof searchOpener.focus === "function") searchOpener.focus();
+	searchOpener = null;
 }
 
 async function runSearch(query) {
@@ -439,6 +466,7 @@ function setRail(open) {
 	document.documentElement.classList.toggle("rail-open", open);
 	const scrim = app.querySelector("[data-rail-close]");
 	if (scrim) scrim.hidden = !open;
+	app.querySelector("[data-rail]")?.setAttribute("aria-expanded", open ? "true" : "false");
 }
 
 function bindChrome() {
@@ -446,24 +474,40 @@ function bindChrome() {
 	app.querySelectorAll("[data-font]").forEach((btn) => {
 		btn.addEventListener("click", () => cycleFont(Number(btn.dataset.font)));
 	});
+	syncFontButtons();
 	app.querySelector("[data-search-open]")?.addEventListener("click", openSearch);
 	app.querySelector("[data-search-close]")?.addEventListener("click", closeSearch);
-	app.querySelector("[data-search]")?.addEventListener("click", (event) => {
+	const searchRoot = app.querySelector("[data-search]");
+	searchRoot?.addEventListener("click", (event) => {
 		if (event.target.matches("[data-search]")) closeSearch();
+	});
+	searchRoot?.addEventListener("keydown", (event) => {
+		if (event.key !== "Tab" || !searchRoot || searchRoot.hidden) return;
+		const items = searchFocusables(searchRoot);
+		if (!items.length) return;
+		const first = items[0];
+		const last = items[items.length - 1];
+		if (event.shiftKey && document.activeElement === first) {
+			event.preventDefault();
+			last.focus();
+		} else if (!event.shiftKey && document.activeElement === last) {
+			event.preventDefault();
+			first.focus();
+		}
 	});
 	const input = app.querySelector("#search-input");
 	if (input) {
-	let timer;
-	let searchSeq = 0;
-	input.addEventListener("input", () => {
-		clearTimeout(timer);
-		const q = input.value;
-		timer = setTimeout(async () => {
-			const seq = ++searchSeq;
-			await runSearch(q);
-			if (seq !== searchSeq) return;
-		}, 120);
-	});
+		let timer;
+		let searchSeq = 0;
+		input.addEventListener("input", () => {
+			clearTimeout(timer);
+			const q = input.value;
+			timer = setTimeout(async () => {
+				const seq = ++searchSeq;
+				await runSearch(q);
+				if (seq !== searchSeq) return;
+			}, 120);
+		});
 	}
 	app.querySelector("[data-rail]")?.addEventListener("click", () => {
 		setRail(!document.documentElement.classList.contains("rail-open"));
@@ -480,6 +524,8 @@ async function render() {
 	const seq = ++renderSeq;
 	const route = parseRoute();
 	setRail(false);
+	document.documentElement.classList.remove("search-open");
+	searchOpener = null;
 	window.scrollTo(0, 0);
 	if (route.view !== "library") {
 		app.innerHTML = `${topbar({ title: "Opening…" })}<main id="main" class="missing"><p>Opening…</p></main>`;
