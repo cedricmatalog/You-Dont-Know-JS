@@ -1,0 +1,241 @@
+/* Skip, topbar, Display, buttons. */
+.skip-link {
+	position: absolute;
+	left: 1rem;
+	top: -4rem;
+	z-index: 20;
+	padding: 0.5rem 0.8rem;
+	background: var(--ink);
+	color: var(--paper);
+}
+
+.skip-link:focus {
+	top: 0.6rem;
+}
+
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+}
+
+.topbar {
+	position: sticky;
+	top: 0;
+	z-index: 8;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.45rem 0.7rem;
+	padding-top: max(0.45rem, env(safe-area-inset-top));
+	padding-left: max(0.7rem, env(safe-area-inset-left));
+	padding-right: max(0.7rem, env(safe-area-inset-right));
+	background: color-mix(in srgb, var(--paper) 88%, transparent);
+	backdrop-filter: blur(14px);
+	border-bottom: 1px solid var(--line);
+}
+
+.topbar-left,
+.topbar-right {
+	display: flex;
+	align-items: center;
+	gap: 0.45rem;
+}
+
+.topbar-right {
+	justify-content: flex-end;
+}
+
+.topbar-title {
+	margin: 0;
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	text-align: center;
+	font-family: var(--font-mono);
+	font-size: 0.72rem;
+	letter-spacing: 0.02em;
+	color: var(--muted);
+}
+
+.brand {
+	display: flex;
+	align-items: center;
+	gap: 0.55rem;
+	color: var(--ink);
+	text-decoration: none;
+	font-family: var(--font-display);
+	font-weight: 800;
+	letter-spacing: -0.04em;
+}
+
+.brand-name span {
+	margin-left: 0.2rem;
+	color: var(--ember-text);
+	font-weight: 700;
+}
+
+.brand-mark {
+	width: 1.15rem;
+	height: 1.15rem;
+	border-radius: 50%;
+	background: var(--ember);
+	box-shadow:
+		0 0 0 3px var(--paper),
+		0 0 0 4.5px var(--gold),
+		0 0 0 7px var(--paper),
+		0 0 0 8.5px var(--scope);
+}
+
+.icon-btn,
+.text-btn {
+	appearance: none;
+	border: 0;
+	background: transparent;
+	color: var(--ink);
+	cursor: pointer;
+	font: 500 0.78rem/1 var(--font-mono);
+	letter-spacing: 0.02em;
+	min-width: 44px;
+	min-height: 44px;
+	padding: 0;
+	flex: 0 0 auto;
+	touch-action: manipulation;
+}
+
+.icon-btn {
+	display: grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 999px;
+	flex: 0 0 auto;
+}
+
+.icon-btn svg {
+	width: 1.15rem;
+	height: 1.15rem;
+}
+
+.icon-btn:hover,
+.text-btn:hover:not(:disabled),
+.icon-btn:active,
+.text-btn:active:not(:disabled) {
+	color: var(--ember-text);
+}
+
+.text-btn:disabled {
+	opacity: 0.35;
+	cursor: not-allowed;
+	color: var(--muted);
+}
+
+.search-open {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.35rem;
+	width: auto;
+	padding: 0 0.7rem;
+	min-width: 44px;
+}
+
+.search-open svg {
+	width: 1.05rem;
+	height: 1.05rem;
+	flex: 0 0 auto;
+}
+
+.read-menu {
+	position: relative;
+}
+
+.read-panel {
+	position: absolute;
+	top: calc(100% + 0.35rem);
+	right: 0;
+	z-index: 9;
+	width: min(16.5rem, calc(100vw - 1.2rem));
+	padding: 0.85rem 0.9rem 0.95rem;
+	background: var(--paper);
+	border: 1px solid var(--line);
+	box-shadow: var(--shadow);
+}
+
+.read-legend {
+	margin: 0.65rem 0 0.25rem;
+	font-family: var(--font-mono);
+	font-size: 0.68rem;
+	letter-spacing: 0.04em;
+	color: var(--muted);
+}
+
+.read-legend:first-child {
+	margin-top: 0;
+}
+
+.read-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.15rem;
+}
+
+.read-row .text-btn[aria-checked="true"] {
+	color: var(--ember-text);
+	box-shadow: inset 0 -2px 0 var(--ember);
+}
+
+.read-step {
+	margin: 0.35rem 0 0;
+	font-family: var(--font-mono);
+	font-size: 0.72rem;
+	color: var(--muted);
+}
+
+.read-hint {
+	margin: 0.75rem 0 0;
+	color: var(--muted);
+	font-size: 0.78rem;
+	line-height: 1.4;
+}
+
+kbd {
+	font-family: var(--font-mono);
+	font-size: 0.72em;
+	padding: 0.05em 0.35em;
+	border: 1px solid var(--line);
+	border-radius: 0.2rem;
+}
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 44px;
+	padding: 0.7rem 1.05rem;
+	border-radius: 999px;
+	text-decoration: none;
+	font-family: var(--font-display);
+	font-weight: 700;
+	letter-spacing: -0.02em;
+	touch-action: manipulation;
+}
+
+.btn-primary {
+	background: var(--ink);
+	color: var(--paper);
+}
+
+.btn-primary:hover {
+	background: var(--btn-hover);
+	color: var(--paper);
+}
+
+.btn-ghost {
+	color: var(--ink);
+	box-shadow: inset 0 0 0 1px var(--line);
+}

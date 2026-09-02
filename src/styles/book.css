@@ -1,0 +1,110 @@
+/* Book page, chapter list, marbles. */
+.book-hero {
+	display: grid;
+	grid-template-columns: 8.5rem 1fr;
+	gap: 1.6rem;
+	align-items: center;
+	margin: 2rem 0 0;
+	padding: 1.3rem;
+	border: 1px solid var(--line);
+	background: color-mix(in srgb, var(--paper) 70%, #fff);
+}
+
+.book-cover {
+	height: 10rem;
+}
+
+.book-cover .spine-art {
+	height: 100%;
+}
+
+.chapter-index {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.chapter-row {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	border-bottom: 1px solid var(--line);
+}
+
+.chapter-index a {
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	gap: 0.9rem;
+	align-items: center;
+	flex: 1;
+	min-width: 0;
+	padding: 0.95rem 0.95rem;
+	color: inherit;
+	text-decoration: none;
+}
+
+.unread-btn {
+	justify-self: end;
+	padding-inline: 0.4rem;
+}
+
+.unread-wrap {
+	margin: 1.2rem 0 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+}
+
+.search-mark {
+	background: color-mix(in srgb, var(--gold) 42%, var(--paper));
+	color: var(--ink);
+	padding: 0 0.12em;
+}
+
+.chapter-index small,
+.rail-item small {
+	display: block;
+	margin-bottom: 0.15rem;
+	font-family: var(--font-mono);
+	font-size: 0.68rem;
+	letter-spacing: 0.03em;
+	color: var(--muted);
+}
+
+.chapter-index strong {
+	font-family: var(--font-display);
+	font-size: 1.15rem;
+	letter-spacing: -0.03em;
+}
+
+.mins {
+	font-family: var(--font-mono);
+	font-size: 0.72rem;
+	font-variant-numeric: tabular-nums;
+	color: var(--muted);
+}
+
+.marble {
+	width: 0.62rem;
+	height: 0.62rem;
+	border-radius: 50%;
+	background: transparent;
+	box-shadow: inset 0 0 0 1.5px var(--line);
+}
+
+.marble.is-done {
+	background: var(--gold);
+	box-shadow: none;
+}
+
+.marble.is-started {
+	background: color-mix(in srgb, var(--ember) 45%, transparent);
+	box-shadow: inset 0 0 0 1.5px var(--ember);
+}
+
+.marble.is-here {
+	background: var(--ember);
+	box-shadow:
+		0 0 0 3px var(--paper),
+		0 0 0 4.5px var(--ember);
+}

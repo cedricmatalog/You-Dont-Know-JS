@@ -1,0 +1,115 @@
+/* Colors, type, reset. */
+:root {
+	--paper: #e7edf4;
+	--ink: #1a2330;
+	--muted: #536274;
+	--line: #c3cedb;
+	--scope: #3d6b8c;
+	--ember: #c45c26;
+	--gold: #b7922a;
+	--code: #dce4ee;
+	--code-ink: #1a2330;
+	--shadow: 0 10px 22px rgba(26, 35, 48, 0.07);
+	--rail: 17.5rem;
+	--prose: 68ch;
+	--font-display: "Bricolage Grotesque", sans-serif;
+	--font-body: "Literata", "Iowan Old Style", "Palatino Linotype", serif;
+	--font-mono: "IBM Plex Mono", ui-monospace, monospace;
+	--font-scale: 1;
+	--book: var(--scope);
+	--ember-text: color-mix(in srgb, var(--ember) 70%, var(--ink));
+	--gold-text: color-mix(in srgb, var(--gold) 50%, var(--ink));
+	--scope-text: color-mix(in srgb, var(--scope) 70%, var(--ink));
+	--code-string: #1f5c3e;
+	--btn-hover: color-mix(in srgb, var(--ember) 70%, var(--ink));
+}
+
+[data-theme="night"] {
+	--paper: #12161d;
+	--ink: #e6e1d4;
+	--muted: #9aa6b4;
+	--line: #2a3340;
+	--scope: #7ba7c4;
+	--ember: #e08a4f;
+	--gold: #d4b44a;
+	--code: #1b222c;
+	--code-ink: #d8deea;
+	--shadow: 0 10px 22px rgba(0, 0, 0, 0.32);
+	--ember-text: var(--ember);
+	--gold-text: var(--gold);
+	--scope-text: var(--scope);
+	--code-string: #8fcead;
+	--btn-hover: var(--ember);
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	background: var(--paper);
+	color: var(--ink);
+	font-family: var(--font-body);
+	font-size: 17px;
+	line-height: 1.55;
+	scroll-behavior: smooth;
+	-webkit-text-size-adjust: 100%;
+	caret-color: var(--ember);
+	scrollbar-color: color-mix(in srgb, var(--scope) 55%, var(--line)) transparent;
+	scrollbar-width: thin;
+}
+
+@media (min-width: 700px) {
+	html {
+		font-size: 18px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+	*,
+	*::before,
+	*::after {
+		animation: none !important;
+		transition: none !important;
+	}
+}
+
+body {
+	margin: 0;
+	min-height: 100dvh;
+	overflow-x: clip;
+	background:
+		radial-gradient(circle at 12% -8%, color-mix(in srgb, var(--scope) 18%, transparent), transparent 42%),
+		radial-gradient(circle at 92% 0%, color-mix(in srgb, var(--ember) 12%, transparent), transparent 36%),
+		var(--paper);
+	-webkit-tap-highlight-color: color-mix(in srgb, var(--ember) 22%, transparent);
+}
+
+a {
+	color: var(--scope);
+	text-decoration-thickness: 1px;
+	text-underline-offset: 0.18em;
+}
+
+a:hover {
+	color: var(--ember-text);
+}
+
+main:focus {
+	outline: none;
+}
+
+main:focus-visible {
+	outline: 2px solid var(--ember);
+	outline-offset: 3px;
+}
+
+::selection {
+	background: color-mix(in srgb, var(--ember) 32%, var(--paper));
+	color: var(--ink);
+}
