@@ -70,7 +70,7 @@ printName(student);
 
 You wanted to log Suzy. You **adopted** a thenable. `await student` called `student.then`. If `then` calls `resolve(this)` you might get lucky. If it never calls `resolve`, `printName` hangs. If JSON.parse revived a field named `"then"` that isn't a function, you're usually safe -- JSON values aren't callable. A class instance is the trap.
 
-Name the method `andThen` or don't put continuation protocol on records. `Promise.resolve(x)` is the same adoption.
+Don't put a `.then` method on records unless you meant adoption. `Promise.resolve(x)` is the same protocol.
 
 ## Unhandled Rejection Is A Turn Too Late
 
@@ -133,7 +133,7 @@ Promise.try(function(){
 }).catch(onFail);
 ```
 
-`Promise.try(fn)` (ES2025) runs `fn` now, fulfills with a return, rejects if it throws *or* if it returns a rejected promise. That's the adapter Chapter 3 wanted instead of `new Promise` around a function you don't control. If your engine lacks it, `Promise.resolve().then(fn)` is *almost* the same except `fn` runs as a job, not now -- Zalgo-adjacent if `fn` had side effects before throwing.
+`Promise.try(fn)` (ES2025) runs `fn` now, fulfills with a return, rejects if it throws *or* if it returns a rejected promise. The adapter Chapter 3 wanted instead of `new Promise` around a function you don't control. If your engine lacks it, `Promise.resolve().then(fn)` is *almost* the same except `fn` runs as a job, not now -- Zalgo-adjacent if `fn` had side effects before throwing.
 
 ## `requestAnimationFrame` Is Not `setTimeout(16)`
 
@@ -154,7 +154,7 @@ fetch("/api/roster", { signal });
 controller.abort();
 ```
 
-One signal tears down events *and* fetch. That's the composition Chapter 3's `AbortSignal.any` is for when the user cancel and a timeout are different controllers. Don't invent a `cancelled` boolean per listener if you already have a controller.
+One signal tears down events *and* fetch. Chapter 3's `AbortSignal.any` is for when the user cancel and a timeout are different controllers. Don't invent a `cancelled` boolean per listener if you already have a controller.
 
 ## Node `unhandledRejection` vs The Browser
 
@@ -223,11 +223,11 @@ async function names(ids) {
 names([ 73, 14 ]);
 ```
 
-`for await` of an array still works -- the spec awaits each next, and a non-thenable value is treated as already fulfilled. You paid microtask delays for a sync list. `for..of` is the grain for arrays. `for await` is for async iterators. Mixing them "to be future proof" is a waterfall of jobs you didn't need.
+`for await` of an array still works -- the spec awaits each next, and a non-thenable value is treated as already fulfilled. You paid microtask delays for a sync list. `for..of` is for arrays. `for await` is for async iterators. Mixing them "to be future proof" is a waterfall of jobs you didn't need.
 
 ## `queueMicrotask` Recursion Cap
 
-Engines can throw if you recurse jobs too deep (a host/engine limit, not "JS ran out of stack" in the sync sense). A `then` that always `then`s is still a flood even if each job is tiny. Prefer a task (`setTimeout(0)`, `scheduler.postTask`, rAF) when the work is "keep going but let the world in." That's Chapter 6's yield, previewed here so Appendix B's flood isn't a toy.
+Engines can throw if you recurse jobs too deep (a host/engine limit, not "JS ran out of stack" in the sync sense). A `then` that always `then`s is still a flood even if each job is tiny. Prefer a task (`setTimeout(0)`, `scheduler.postTask`, rAF) when the work is "keep going but let the world in." Chapter 6's yield, previewed here so Appendix B's flood isn't a toy.
 
 ## `MessageChannel` As A Task
 
@@ -241,6 +241,6 @@ Engines can throw if you recurse jobs too deep (a host/engine limit, not "JS ran
 
 `AbortSignal.timeout(ms)` is a signal that aborts later. Combine with user cancel via `AbortSignal.any`. That's still not `Promise.race` cancelling the fetch by itself -- you must *pass* the signal into `fetch`. The appendix repeats it because production keeps racing without aborting.
 
-That's thenables, unhandled rejection, timers vs jobs, abort, rAF, Node vs browser, workers' loops, synthetic events, `Promise.try`, `all` vs cancel, `for await` of arrays, microtask floods, MessageChannel, and fs parse. If a production bug isn't in that list, it's probably still "later is a different world."
+This list is thenables, unhandled rejection, timers vs jobs, abort, rAF, Node vs browser, workers' loops, synthetic events, `Promise.try`, `all` vs cancel, `for await` of arrays, microtask floods, MessageChannel, and fs parse. If a production bug isn't in that list, it's probably still "later is a different world."
 
 Now vs later, jobs vs tasks, once vs many, abort the *work*. Four questions. That's Appendix A. Chapter 6 is when the card is too big for one thread.

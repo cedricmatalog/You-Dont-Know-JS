@@ -106,7 +106,7 @@ A promise is always in one of three states:
 
 Settling is **one-way and once**. A fulfilled promise cannot become rejected. A rejected promise cannot become fulfilled. A pending promise can go to either, exactly once. There is no "unsettled again." There is no "fulfilled twice with two values."
 
-That's the trust we couldn't get from callbacks. `resolve(42); resolve(43); reject("nope")` -- the first settle wins; the rest are no-ops.
+Callbacks never had that. `resolve(42); resolve(43); reject("nope")` -- the first settle wins; the rest are no-ops.
 
 ```js
 p = new Promise(function executor(resolve, reject){
@@ -165,7 +165,7 @@ fetch("/api/user")
 
 ## Errors Fall Until Caught
 
-A rejection skips `onFulfilled` handlers until it finds an `onRejected` / `.catch(..)`. That's the async cousin of `throw` skipping `try` blocks until `catch`. If nothing catches it, the host reports an unhandled rejection.
+A rejection skips `onFulfilled` handlers until it finds an `onRejected` / `.catch(..)`. Same skip as `throw` walking `try` blocks until `catch`. If nothing catches it, the host reports an unhandled rejection[^UnhandledRejection] -- after the current checkpoint, not as a sync throw.
 
 ```js
 Promise.reject(new Error("oops"))
@@ -281,9 +281,13 @@ button.addEventListener("click", function(){
 
 ## Thenables That Aren't Promises
 
-A *thenable* is any object with a `.then` method. Promise resolution *adopts* thenables. That's how libraries interoperated before `Promise` was in the language, and it's still how some foreign futures plug in.
+A *thenable* is any object with a `.then` method. Promise resolution *adopts* thenables by enqueueing a **PromiseResolveThenableJob**[^PromiseResolveThenableJob]. Libraries interoperated that way before `Promise` was in the language. Foreign futures still plug in that way.
 
 It's also a footgun: if you accidentally have an object with a `then` property that is a function (malicious JSON, a weird class), `Promise.resolve(obj)` will treat it as a thenable and call `then`. Don't put a function named `then` on ordinary data objects.
+
+The job is not `obj.then()` on this turn. Resolution enqueues work; `then` runs as a job, like every other reaction. A thenable that calls its resolve callback synchronously still cannot re-enter your `Promise.resolve` line. Zalgo stays dead. A thenable that never calls either callback is a pending-forever leak -- same as a `fetch` you forgot to join.
+
+Appendix A has the "thenable worm" classroom DTO if you want to see a JSON payload take over a chain. The spec name is enough for this chapter: **thenable** is a protocol, not a brand.
 
 ## Sync-Looking Lies
 
@@ -323,6 +327,26 @@ controller.abort();
 ```
 
 `AbortSignal.timeout(ms)` and `AbortSignal.any([..])` compose cancellation the way `Promise.race` / `any` compose settlement -- for the *work*, not just the listener.
+
+Timeout-via-`Promise.race` still leaves the `fetch` in flight. Timeout-via-`AbortSignal.timeout` can be passed *into* `fetch`, so the host tears the connection down. `AbortSignal.any([ userSignal, AbortSignal.timeout(8000) ])` is "user cancel *or* eight seconds," one signal, one `fetch` option.
+
+```js
+function fetchStudent(id, signal) {
+    var timed = AbortSignal.any([
+        signal,
+        AbortSignal.timeout(8000)
+    ]);
+    return fetch("/api/students/" + id, { signal: timed })
+        .then(function onResp(resp){
+            if (!resp.ok) throw new Error("not ok");
+            return resp.json();
+        });
+}
+```
+
+The promise still has two states after abort: it **rejects** (`AbortError`). There is no third "cancelled" box on the figure. If you `catch` and swallow `AbortError` because the user navigated away, say that in the handler. A pending-forever promise after abort is a leak that looks like patience.
+
+`Promise.all` does not take a signal. You pass the same `timed` into every `fetchStudent`, then `all` rejects on the first abort *and* the other fetches stop because they share the signal. Combinator first; signal through the leaves. Reversing that (race the join, forget the leaves) is how you "cancel" a spinner and keep downloading.
 
 ## Promises Are Values
 
@@ -378,7 +402,7 @@ return fetchStudent(studentID)
 3. `.then(onEnrollments)` returns *now*, a third promise. `.catch(onFail)` a fourth. `printSummary` returns that last one *now*.
 4. *Later,* student promise fulfills. A **job** runs `onStudent`. It assigns `student` (live binding -- Book 2) and returns the enrollments promise. The second promise *adopts* that returned promise (assimilate).
 5. *Later still,* enrollments fulfill. A job runs `onEnrollments`. `console.log` is *now* on that job. The third promise fulfills with `student`.
-6. If anything along the way rejected, jobs skip until `onFail`. The returned promise fulfills with `undefined` (we didn't rethrow). Callers who `await printSummary` get `undefined` on failure unless you `throw err` in `onFail`. That's a choice. Make it on purpose.
+6. If anything along the way rejected, jobs skip until `onFail`. The returned promise fulfills with `undefined` (we didn't rethrow). Callers who `await printSummary` get `undefined` on failure unless you `throw err` in `onFail`. Pick that. Don't inherit it.
 
 The nested version from the start of the chapter is the same jobs with worse plumbing. The `async`/`await` version in Chapter 5 is the same jobs with the compiler writing this chain. If you cannot walk *this*, `await` will be a pause button in your head, and you will serialize `fetchA` and `fetchB` without noticing.
 
@@ -412,8 +436,12 @@ return fetchStudent(id);
 
 The wrapper can drop rejections if you write `.then(resolve)` without `reject`, can double-resolve if you also call `resolve` yourself, and tells the next reader you don't trust `.then`'s return value. Trust it.
 
-Take the Chapter 2 hostile `fetch` (called twice, called with an error after success) and wrap it in `new Promise` *once*, with `onceLater` or a `called` flag in the executor. That's the adapter layer. Above that layer, speak only promises.
+Take the Chapter 2 hostile `fetch` (called twice, called with an error after success) and wrap it in `new Promise` *once*, with `onceLater` or a `called` flag in the executor. That wrapper is the adapter. Above it, speak only promises.
 
 Chapter 4 adds another kind of value-that-represents-a-sequence: iterators and generators. Combined with promises, they are the engine under `async`/`await`. Even if you only ever write `async function`, you should know what's moving. Don't skip Chapter 4 because the syntax looks old. `await` is that chapter wearing nicer clothes.
 
-[^PerformPromiseThen]: "27.2.1.3.1 PerformPromiseThen ( promise, onFulfilled, onRejected [ , resultCapability ] )", ECMAScript 2025 Language Specification; https://262.ecma-international.org/16.0/#sec-performpromisethen ; Accessed September 2026
+[^PerformPromiseThen]: "27.2.5.4.1 PerformPromiseThen ( promise, onFulfilled, onRejected [ , resultCapability ] )", ECMAScript 2025 Language Specification; https://262.ecma-international.org/16.0/#sec-performpromisethen ; Accessed September 2026
+
+[^PromiseResolveThenableJob]: "27.2.2.2 NewPromiseResolveThenableJob ( promiseToResolve, thenable, then )", ECMAScript 2025 Language Specification; https://262.ecma-international.org/16.0/#sec-newpromiseresolvethenablejob ; Accessed September 2026
+
+[^UnhandledRejection]: "8.1.7.3 Event loop processing model" / "notify about rejected promises", HTML Living Standard; https://html.spec.whatwg.org/multipage/webappapis.html#unhandled-promise-rejections ; Accessed September 2026

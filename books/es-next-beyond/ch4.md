@@ -325,7 +325,7 @@ Temporal.ZonedDateTime.from({
 
 Fall-back is the opposite bug: 1:30am happens twice. `from` without disambiguation is underspecified. Make it specified.
 
-This is why `PlainDateTime.toZonedDateTime(zone)` is a *lossy, policy-bearing* conversion, not a cast. You are asserting "this civil time in this zone," and some civil times are not a unique instant. Book 4's coercions had corner cases. Time has them too. Name the policy.
+This is why `PlainDateTime.toZonedDateTime(zone)` is a *lossy, policy-bearing* conversion, not a cast. You are asserting "this civil time in this zone," and some civil times are not a unique instant. Book 4's coercions had corner cases. Time has them too. Write the policy down.
 
 ### Calendars Are Not Always Gregorian
 
@@ -380,7 +380,7 @@ lateChicago.withTimeZone("Europe/Paris").toPlainDate().toString();
 // "2022-07-08" -- a late Chicago evening is already tomorrow in Paris
 ```
 
-`withTimeZone` does **not** keep 11:00 and move the zone (that would be a different instant -- "11:00 in Paris"). It keeps the instant and *projects* a new wall clock. That's the operation people meant when they called `toLocaleString` on a `Date` and hoped. Here it's typed.
+`withTimeZone`[^WithTimeZone] does **not** keep 11:00 and move the zone (that would be a different instant -- "11:00 in Paris"). It keeps the instant and *projects* a new wall clock. People meant this when they called `toLocaleString` on a `Date` and hoped. Here it's typed.
 
 The opposite -- "same civil time, different zone" -- is a *new* instant:
 
@@ -464,7 +464,7 @@ scheduleMeeting("07:30",30,workDay);     // true
 scheduleMeeting("17:30",30,workDay);     // false
 ```
 
-Walk it slowly. Don't skip -- this is the `lookupStudent` of the chapter, just with clocks instead of closures.
+Go slowly. Don't skip -- this is the `lookupStudent` of the chapter, just with clocks instead of closures.
 
 1. `workDay.date` is a civil day. `PlainDate.from("2022-07-07")` has no 11:00, no Chicago, no UTC. It is the workshop *day*.
 2. `startTime` `"07:30"` is a `PlainTime`. It is not "07:30 UTC" and it is not "07:30 in the user's laptop zone." It is a wall-clock time waiting to be *placed*.
@@ -668,3 +668,5 @@ Chapter 5 looks past what's already in the spec: the proposals that might change
 [^PlainDateUntil]: "Temporal.PlainDate.prototype.until ( other [ , options ] )", largestUnit constrained to date units; https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.until ; Accessed September 2026
 
 [^IntlInstant]: "DateTimeFormat.prototype.format ( dateTime )", ECMA-402; `Temporal.ZonedDateTime` is not a valid input — pass an `Instant` (or a `Date`); https://tc39.es/ecma402/#sec-datetimeformat.prototype.format ; Accessed September 2026
+
+[^WithTimeZone]: "Temporal.ZonedDateTime.prototype.withTimeZone ( timeZone )", Temporal proposal; https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.withtimezone ; Accessed September 2026

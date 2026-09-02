@@ -268,7 +268,7 @@ Suggested solution for "Microtask Flood":
 
 Promise-then flood: `"task"` **never** prints (until the tab is killed). Jobs drain to empty; each job queues another job; the timeout is a task waiting for an empty microtask queue.
 
-`setTimeout(flood, 0)` flood: `"task"` **can** print (order with the other timeout depends on who was queued first). Each flood turn *is* a task, so other tasks interleave. That's Chapter 1's two queues. Cooperative yielding has to put the card on a *task* (or rAF), not another job.
+`setTimeout(flood, 0)` flood: `"task"` **can** print (order with the other timeout depends on who was queued first). Each flood turn *is* a task, so other tasks interleave. Chapter 1's two queues. Cooperative yielding has to put the card on a *task* (or rAF), not another job.
 
 Suggested solution for "`Promise.all` Order":
 

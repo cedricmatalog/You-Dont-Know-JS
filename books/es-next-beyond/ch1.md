@@ -113,7 +113,7 @@ function classroomBaseline() {
 }
 ```
 
-Walk it. `?.` and `??` are **syntax**. `typeof` cannot see them -- if the file parsed, you have them, or a transpiler gave you an equivalent. `Object.groupBy` is an **API**. `typeof` is the right check in *this* realm. Temporal is an **API namespace**. Same.
+Look at the checks. `?.` and `??` are **syntax**. `typeof` cannot see them -- if the file parsed, you have them, or a transpiler gave you an equivalent. `Object.groupBy` is an **API**. `typeof` is the right check in *this* realm. Temporal is an **API namespace**. Same.
 
 If `classroomBaseline().temporal` is `false` in Node LTS and `true` in Chrome, you do not "use Temporal." You pick: polyfill the namespace, or keep `Date` at the Node edge and convert at the browser edge, or bump the LTS. That sentence is this book. The feature list in Chapters 2--4 is useless if you cannot say which of those three you meant.
 
@@ -263,7 +263,7 @@ delete-by: stage 4 AND baseline -- not "when the plugin is popular"
 do not: Babel plugin as production JS
 ```
 
-Two cards. Same five blanks. Different tonight. If those two cards feel identical, you are still reading stage numbers as permission. They are not permission. They are a maturity label for a *proposal*. Stage 4 is the only number that means "this is JS." Even then, your *engines* might not have it yet. That's the second axis: spec vs baseline.
+Two cards. Same five blanks. Different tonight. If those two cards feel identical, you are still reading stage numbers as permission. They are not permission. They are a maturity label for a *proposal*. Stage 4 is the only number that means "this is JS." Even then, your *engines* might not have it yet. Spec vs baseline is a second axis.
 
 `classroomBaseline` is not a library. It's a comment at the top of the workshop files:
 
@@ -281,9 +281,9 @@ function printSummary(student) {
 
 The function is boring on purpose. Chapter 2 will make `?.` interesting. Chapter 3 will make `groupBy` interesting. Chapter 4 will make Instant interesting. Chapter 5 will make "not: `|>`" interesting. This chapter only makes the *comment* interesting -- because without it, the rest of the book is a catalog you will binge and forget.
 
-That's the *Get Started* Chapter 1 move again: before surveying JS, we said what JS *is*. Before surveying June, we say what "in JS" *means*.
+Before surveying JS, *Get Started* Chapter 1 said what JS *is*. Before surveying June, we say what "in JS" *means*.
 
-Chapter 2 is a tour of syntax that's already here, and that I still see people using as if it were magic (or avoiding as if it were dangerous). Neither is the grain.
+Chapter 2 is a tour of syntax that's already here, and that I still see people using as if it were magic (or avoiding as if it were dangerous). Neither.
 
 Take ten minutes. Fill *one* card for a feature you used last week. If you cannot name the stage without guessing, that's the lesson -- not a failure of memory, a failure of the habit. The rest of this book assumes you will do that when a blog says "JS now does X." Chapter 2 will not remind you again at every `?.`. This chapter is the reminder.
 

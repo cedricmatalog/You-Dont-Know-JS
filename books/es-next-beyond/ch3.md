@@ -46,7 +46,7 @@ set.add(value);
 set.has(value);
 ```
 
-`Map` keys can be **any value**, including objects, compared with `SameValueZero` (like `===` but `-0` and `0` are the same, and `NaN` matches `NaN`). Object keys stringify. That's the whole reason `Map` exists.
+`Map` keys can be **any value**, including objects, compared with `SameValueZero`[^SameValueZero] (like `===` but `-0` and `0` are the same, and `NaN` matches `NaN`). Object keys stringify. Map exists so the key can stay an object.
 
 ```js
 obj = {};
@@ -84,7 +84,7 @@ log.hasSignedIn(kyleB);      // true  -- BUG
 
 `signed[person]` is `signed[String(person)]` is `signed["[object Object]"]`. One slot. Appendix B asks you to fix this with `WeakSet`. The *types* reason is ToString on a property key (*Types & Grammar*). The *collections* reason is: **object identity is not a string.** `Map` / `WeakMap` / `Set` / `WeakSet` exist so you stop flattening identity into a key you can print.
 
-`signed[person.id]` is a different program: two objects with `id: 14` become one person. That's correct for a database primary key and wrong for "this object instance clicked the button." Name which program you are writing.
+`signed[person.id]` is a different program: two objects with `id: 14` become one person. Correct for a database primary key. Wrong for "this object instance clicked the button." Write which program you are writing.
 
 ## WeakRef And FinalizationRegistry
 
@@ -116,7 +116,7 @@ Map.groupBy(rows, row => row.type);
 // Map { "fruit" => [ ... ], "veg" => [ ... ] }
 ```
 
-`Object.groupBy` keys are strings (ToString). `Map.groupBy` keys are whatever the callback returns. That's the `Map` vs object lesson again.
+`Object.groupBy` keys are strings (ToString).[^ObjectGroupBy] `Map.groupBy` keys are whatever the callback returns. Same `Map` vs object lesson as the two Kyles.
 
 ## Iterator Helpers
 
@@ -218,7 +218,7 @@ byTrack.core.map(function id(r){ return r.id; });
 
 Copying array methods (`.toSorted()`, `.with(i, v)`) exist because `.sort()` mutates and people pass arrays through React state. If you own the array and you meant to mutate, `.sort()` is still honest. If the array arrived as an argument you shouldn't shuffle, copy. The new methods are not "more functional JS." They are "I noticed the mutation."
 
-`structuredClone(classroom)` walks the graph. Functions throw. That's the honest error. `{ ...classroom }` copies one layer. Know which clone you bought.
+`structuredClone(classroom)` walks the graph. Functions throw -- an honest error. `{ ...classroom }` copies one layer. Know which clone you bought.
 
 | NOTE: |
 | :--- |
@@ -294,6 +294,10 @@ byId.set(kyleA.id, true);
 byId.get(kyleB.id);          // true -- same primary key
 ```
 
-`WeakSet` of person objects is the first column (identity, GC). `Map` of ids is the second (database). A POJO `signedIn[kyleA] = true` is neither: it ToString's to `"[object Object]"` and collides. Three programs. Pick one on purpose.
+`WeakSet` of person objects is the first column (identity, GC). `Map` of ids is the second (database). A POJO `signedIn[kyleA] = true` is neither: it ToString's to `"[object Object]"` and collides. Three programs. Pick one.
 
 Chapter 4 is the big one that `Date` veterans have been waiting a decade for: Temporal, now actually JS.
+
+[^SameValueZero]: "7.2.10 SameValueZero ( x, y )", ECMAScript 2025 Language Specification; https://262.ecma-international.org/16.0/#sec-samevaluezero ; Accessed September 2026
+
+[^ObjectGroupBy]: "20.1.2.13 Object.groupBy ( items, callback )", ECMAScript 2025 Language Specification; https://262.ecma-international.org/16.0/#sec-object.groupby ; Accessed September 2026

@@ -22,7 +22,7 @@ Welcome to book 5 in the *You Don't Know JS Yet* series! If you already finished
 
 Asynchrony is not a fourth pillar. It's the clock the other three run on.
 
-The first edition of this material lived in *Async & Performance*, which spent as much time on benchmarking and web workers as on promises. This second-edition book is deliberately retitled *Sync & Async*. Performance still matters -- a 200ms JSON parse still janks a page -- but the grain of JS asynchrony is **time and trust**, not flame charts. We'll get to workers and scheduling in Chapter 6. We will not start there.
+The first edition of this material lived in *Async & Performance*, which spent as much time on benchmarking and web workers as on promises. This second-edition book is deliberately retitled *Sync & Async*. Performance still matters -- a 200ms JSON parse still janks a page -- but JS asynchrony is **time and trust**, not flame charts. We'll get to workers and scheduling in Chapter 6. We will not start there.
 
 | NOTE: |
 | :--- |
@@ -206,14 +206,14 @@ C
 B
 ```
 
-Walk it with me, slowly.
+Read the six steps slowly.
 
 1. The current task (this script) logs `A`.
-2. `setTimeout(.., 0)` asks the host: "please queue `onTimeout` as a **task** once the timer is due." Zero means "as soon as you legally can," not "now."
-3. `Promise.resolve().then(onThen)` queues `onThen` as a **microtask**.
+2. `setTimeout(.., 0)` asks the host to **queue a task**[^QueueATask] for `onTimeout` once the timer is due. Zero means "as soon as you legally can," not "now."
+3. `Promise.resolve().then(onThen)` asks the engine to **enqueue a promise job**[^HostEnqueuePromiseJob]. In browsers that job is a microtask.
 4. The current task logs `D` and finishes.
-5. Microtasks drain: `C`.
-6. The host is allowed to paint, then pick the next task: `B`.
+5. The host **performs a microtask checkpoint**[^MicrotaskCheckpoint]: drain the job queue until it is empty. `C` prints.
+6. The host **may update the rendering**[^UpdateTheRendering], then pick the next task: `B`.
 
 `C` beats `B` even though both were scheduled "now," because "now" is not one bucket. There are *soon* (jobs) and *later* (tasks).
 
@@ -223,7 +223,7 @@ Walk it with me, slowly.
 
 ### Jobs Can Queue Jobs
 
-A microtask can schedule another microtask. The queue drains *to empty*, so those nested jobs still run before the next task:
+A microtask can schedule another microtask. The checkpoint does not stop after one job. It runs until the queue is empty, so nested jobs still beat the next task:
 
 ```js
 Promise.resolve()
@@ -384,4 +384,12 @@ Chapter 2 starts with callbacks -- the foundation everything else still sits on,
 
 [^HTMLEventLoop]: "8.1.7.3 Event loop processing model", HTML Living Standard; https://html.spec.whatwg.org/multipage/webappapis.html#event-loop-processing-model ; Accessed September 2026
 
-[^Jobs]: "8.4 Jobs and Host Operations to Enqueue Jobs", ECMAScript 2025 Language Specification; https://262.ecma-international.org/16.0/#sec-jobs ; Accessed September 2026
+[^QueueATask]: "8.1.7.1 Event loops", queue a task, HTML Living Standard; https://html.spec.whatwg.org/multipage/webappapis.html#queue-a-task ; Accessed September 2026
+
+[^HostEnqueuePromiseJob]: "9.5.5 HostEnqueuePromiseJob ( job, realm )", ECMAScript 2025 Language Specification; https://262.ecma-international.org/16.0/#sec-hostenqueuepromisejob ; Accessed September 2026
+
+[^MicrotaskCheckpoint]: "perform a microtask checkpoint", HTML Living Standard; https://html.spec.whatwg.org/multipage/webappapis.html#perform-a-microtask-checkpoint ; Accessed September 2026
+
+[^UpdateTheRendering]: "update the rendering", HTML Living Standard; https://html.spec.whatwg.org/multipage/webappapis.html#update-the-rendering ; Accessed September 2026
+
+[^Jobs]: "9.5 Jobs and Host Operations to Enqueue Jobs", ECMAScript 2025 Language Specification; https://262.ecma-international.org/16.0/#sec-jobs ; Accessed September 2026

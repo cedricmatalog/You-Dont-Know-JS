@@ -13,7 +13,7 @@ name = record.getName?.();
 first = items?.[0];
 ```
 
-Optional chaining: if the value before `?.` is `null` or `undefined`, the expression is `undefined` and the rest does not run. It does **not** check truthiness. `0?.toFixed(2)` is `"0.00"`.
+Optional chaining[^OptionalChain]: if the value before `?.` is `null` or `undefined`, the expression is `undefined` and the rest does not run. It does **not** check truthiness. `0?.toFixed(2)` is `"0.00"`.
 
 You cannot assign through it (`a?.b = 1` is a syntax error). You should not use it to hide bugs (`data?.foo?.bar?.baz` six levels deep usually means you don't know your data). Use it at *real* boundaries: "this key might be absent," "this API might not exist."
 
@@ -45,9 +45,27 @@ function firstCourse(student) {
 firstCourse(suzy);           // "YDKJS"
 firstCourse(kyle);           // "none"
 firstCourse(null);           // "none" -- student itself nullish
+firstCourse(73);             // "none" -- BUG: 73 is an id, not a record
 ```
 
 `kyle.enrollment && kyle.enrollment.courses[0]` would also "work" here because missing `enrollment` is `undefined` (falsy *and* nullish). The day `enrollment` is `0` because someone reused a field, `&&` lies and `?.` doesn't. That's *Types & Grammar* Chapter 5 again. This chapter is just: the syntax is in your baseline now, so use the one that matches the question you are asking.
+
+`student?.enrollment?.courses?.[0]` also "works" for `73`: `typeof 73` is `"number"`, `?.` does not run, you get `"none"`. A missing field and a programming error look the same. Guard the shape; chain the fields:
+
+```js
+function firstCourse(student) {
+    if (student == null) return "none";
+    if (typeof student != "object") {
+        throw new TypeError("student record required");
+    }
+    return student.enrollment?.courses?.[0] ?? "none";
+}
+
+firstCourse(suzy);           // "YDKJS"
+firstCourse(kyle);           // "none"
+firstCourse(null);           // "none"
+firstCourse(73);             // TypeError
+```
 
 `student.enrollment?.courses[0]` without `?.` before `[0]` still throws if `courses` is missing -- optional chaining is not a virus that infects the rest of the line. Each `?.` is its own short-circuit point.
 
@@ -68,13 +86,13 @@ port = config.port ?? 80;
 volume = settings.volume ?? 0.8;
 ```
 
-`??` substitutes only for `null` and `undefined`. `||` also substitutes for `0`, `""`, `false`, `NaN`. Volume `0` is a value. Empty string as a stored name may be a value. Default those with `??`, not `||`.
+`??` substitutes only for `null` and `undefined`.[^Nullish] `||` also substitutes for `0`, `""`, `false`, `NaN`. Volume `0` is a value. Empty string as a stored name may be a value. Default those with `??`, not `||`.
 
 | TIP: |
 | :--- |
 | `port = config.port || 80` treats `0` as missing. `port = config.port ?? 80` does not. If you have ever debugged a "port became 80" in production, this is that bug with a name. |
 
-Mixing `??` with `&&` / `||` requires parentheses. That's a syntax error on purpose.
+Mixing `??` with `&&` / `||` requires parentheses. The grammar throws if you don't.
 
 Logical assignment combines both ideas:
 
@@ -228,9 +246,9 @@ function pickVolume(settings) {
 pickVolume({ volume: 0 });   // 0
 ```
 
-`settings.volume ??= 0.8` is the same question as assignment: write only if missing. `settings.debug ||= true` will skip writing if `debug` is `false` -- sometimes you mean that (already disabled), sometimes you meant "unset." Name the question.
+`settings.volume ??= 0.8` is the same question as assignment: write only if missing. `settings.debug ||= true` will skip writing if `debug` is `false` -- sometimes you mean that (already disabled), sometimes you meant "unset." Ask which.
 
-`import()` is Chapter 5 of *Sync & Async* wearing a module specifier. It returns a promise *now*. The namespace is *later*. Static `import` is *Scope & Closures* Chapter 8: bindings, TDZ, one evaluation. Don't `import()` a file you always need because "dynamic looks modern." The bundler cannot tree-shake a string you compute at runtime as well as a static specifier. Conditional `import()` of a polyfill *after* a `typeof` check is the grain.
+`import()` is Chapter 5 of *Sync & Async* wearing a module specifier.[^ImportCall] It returns a promise *now*. The namespace is *later*. Static `import` is *Scope & Closures* Chapter 8: bindings, TDZ, one evaluation. Don't `import()` a file you always need because "dynamic looks modern." The bundler cannot tree-shake a string you compute at runtime as well as a static specifier. Conditional `import()` of a polyfill *after* a `typeof` check is the right detection.
 
 ### `??` Mixes Need Parens
 
@@ -242,7 +260,7 @@ var port = (record && record.port) ?? 80;
 var port2 = record?.port ?? 80;
 ```
 
-The grammar refused to guess whether `&&` or `??` binds tighter in a way you'd debate. Parenthesize, or use `?.` so you never wrote the `&&`. That's Chapter 2 of *Types & Grammar* wearing new punctuation.
+The grammar refused to guess whether `&&` or `??` binds tighter in a way you'd debate. Parenthesize, or use `?.` so you never wrote the `&&`. *Types & Grammar* Chapter 2, wearing new punctuation.
 
 `catch { }` (optional catch binding) is for "I don't need the error object." Prefer naming `err` and logging it. Empty `catch { }` is still empty `catch`.
 
@@ -287,6 +305,12 @@ Don't skip the `sql` tag because it looked like a library demo. It's the grammar
 
 Read the `firstCourse` snippet again until `kyle.enrollment?.courses?.[0]` vs `kyle.enrollment.courses[0]` is obvious in your sleep. Then you're done with Chapter 2's sharpest edge.
 
-Walk it once more with Kyle missing `enrollment`, Suzy with an empty `courses`, and a bug where `firstCourse(73)` was called with an id. `?.` saves Kyle and Suzy. It must **not** save `73` -- that's `typeof student == "object"` (and not `null`) before you chain. Syntax is not a type system. It is a shorter `&&` for *nullish* steps you already believed were optional.
+Read it once more with Kyle missing `enrollment`, Suzy with an empty `courses`, and a bug where `firstCourse(73)` was called with an id. `?.` saves Kyle and Suzy. It must **not** save `73` -- `typeof student != "object"` throws, it does not return `"none"`. Syntax is not a type system. It is a shorter `&&` for *nullish* steps you already believed were optional.
 
 Chapter 3 is the built-in *objects and methods* that grew up alongside this syntax: maps, sets, iterators, grouping, and the "why is this not an array" collections.
+
+[^OptionalChain]: "13.3.9 Optional Chains", ECMAScript 2025 Language Specification; https://262.ecma-international.org/16.0/#sec-optional-chaining ; Accessed September 2026
+
+[^Nullish]: "13.13 Binary Logical Operators" / `??`, ECMAScript 2025 Language Specification; https://262.ecma-international.org/16.0/#sec-binary-logical-operators ; Accessed September 2026
+
+[^ImportCall]: "13.3.10 Import Calls", `import(specifier)`, ECMAScript 2025 Language Specification; https://262.ecma-international.org/16.0/#sec-import-calls ; Accessed September 2026

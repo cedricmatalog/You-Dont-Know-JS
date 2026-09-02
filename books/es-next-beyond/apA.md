@@ -158,7 +158,7 @@ If you only read explainers, you will be shocked by `delete a?.b`, by Temporal o
 
 ## When To Fork A Proposal
 
-You shouldn't. If you need the problem solved tonight, solve it in userland with the grain of the current language (`match()` dictionary, string keys, `try..finally`, named `var`s). Forking a Babel plugin for stage-1 syntax makes *you* the committee. That's a full-time job you already have.
+You shouldn't. If you need the problem solved tonight, solve it in userland with the current language (`match()` dictionary, string keys, `try..finally`, named `var`s). Forking a Babel plugin for stage-1 syntax makes *you* the committee. That's a full-time job you already have.
 
 ## `with` Type JSON Modules And CSP
 

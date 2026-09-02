@@ -205,7 +205,7 @@ async function total() {
 
 `Promise.all` is better when you want first-rejection semantics and an array of results. Firing the promises first, then awaiting, is the same concurrency if you remember to start them before awaiting.
 
-`await` in a `for` loop is sequential on purpose -- that's how you page through an API. `await` in `forEach` is almost always a bug: `forEach` does not wait for async callbacks.
+`await` in a `for` loop is sequential -- that's how you page through an API. `await` in `forEach` is almost always a bug: `forEach` does not wait for async callbacks.
 
 ```js
 // wrong -- does not wait
@@ -222,7 +222,7 @@ for (let item of items) {
 await Promise.all(items.map(item => save(item)));
 ```
 
-`map` + `Promise.all` is the grain for "do all of these, then continue." `for..of` + `await` is the grain for "do the next only after the previous."
+`map` + `Promise.all` is "do all of these, then continue." `for..of` + `await` is "do the next only after the previous."
 
 ### See The `forEach` Bug
 
@@ -270,15 +270,13 @@ got Kyle
 after
 ```
 
-`"after"` is after both, because this code lives in an `async` function and each `await` pauses *that* function. That's the waterfall. Pick it when you mean it.
+`"after"` is after both, because this code lives in an `async` function and each `await` pauses *that* function. Sequential. Pick it when you mean it.
 
 The concurrent join is still `Promise.all(ids.map(fetchStudent))` -- start all, wait all, get order of `ids` not completion order. Three tools, three outcomes. `forEach` + `async` is none of them.
 
 ## `await` Is Not Allowed Everywhere
 
-`await` is a keyword in async functions and (as of modules) at the top level of a module (*top-level await*). It is a syntax error in ordinary functions, in non-async callbacks you pass to `map` / event handlers, and in the parameter list.
-
-Top-level await means a module's evaluation *is* a promise: importers wait. That's useful for `const config = await loadConfig()`. It also means a slow import delays everyone who imports you. Don't put unbounded I/O at module top level because the syntax lets you.
+`await` is a keyword in async functions and (as of modules) at the top level of a module (*top-level await*). It is a syntax error in ordinary functions, in non-async callbacks you pass to `map` / event handlers, and in the parameter list. Top-level `await` is still a job -- more on that after cancellation.
 
 ## Microtasks And "It Still Interleaves"
 
@@ -385,9 +383,74 @@ If the function is sync today and forever, don't mark it `async` just so you can
 
 `void someAsync()` / `someAsync()` without `await` or `.catch` is a fire-and-forget that drops rejections. Either handle the promise or make the drop explicit with a named helper that logs.
 
+## Cancellation At The `await`
+
+`await fetchStudent(73, signal)` does not invent a new cancel story. The signal still has to reach `fetch`. What `await` adds is a throw site: abort rejects, `await` throws, `try` around the `await` can distinguish `AbortError` from "Suzy wasn't found."
+
+```js
+async function printSummary(studentID, signal) {
+    try {
+        var student = await fetchStudent(studentID, signal);
+        var courses = await fetchEnrollments(student.id, signal);
+        console.log(student.name + " is taking " + courses.join(", "));
+        return student;
+    }
+    catch (err) {
+        if (err.name == "AbortError") return;
+        throw err;
+    }
+}
+```
+
+Swallowing `AbortError` is how an unmounted page stays quiet. Rethrowing everything else is how you don't turn cancel into "all errors are fine." One `AbortController` for the page (or the route), passed down. A new controller per `await` is how you cancel the enrollments call and leave the student call running -- two worlds, two signals, usually a bug.
+
+`for await` of a paginated fetch should abort in `.return()` when the consumer `break`s. Chapter 4 said that. Here it is again because `async`/`await` made people forget the iterator is still a pull protocol with cleanup.
+
+If you `Promise.all` inside `try`, the first reject throws and the other fetches keep going unless they share the signal. Same combinator rule as Chapter 3, now wearing `await`.
+
+## Top-Level `await` Is Still A Job
+
+A module can `await` at the top level. The module graph *waits* for that promise before evaluating importers. It is not a way to sneak sync I/O into load. It is a job, then the rest of the module, then the importer's evaluation -- still later, still one thread.
+
+```js
+// classroom.mjs
+var students = await Promise.all(ids.map(fetchStudent));
+export { students };
+```
+
+`import { students } from "./classroom.mjs"` does not run until `students` is fulfilled. A rejected TLA rejects the module. There is no `try` around the whole file unless you write one. Don't TLA a `fetch` you could start from `main` after the graph is up -- you just made every importer wait on the network.
+
+TLA is useful for: config that must exist before any export is used, a WASM instantiate, a polyfill `import()` you already feature-detected. It is not useful for `printSummary`. That still belongs in a function a click can call, and abort.
+
+## What The Compiler Wrote
+
+`await expr` is not a pause button inside the engine. The spec's `Await` operation[^Await] takes the value, if it is not a thenable fulfills a promise with it, then performs `PerformPromiseThen` with continuations for resume-on-fulfill and throw-on-reject. Those continuations run as jobs. The lines after `await` are the `onFulfilled` you didn't write.
+
+```js
+async function printSummary(id) {
+    var student = await fetchStudent(id);
+    console.log(student.name);
+}
+```
+
+is the same jobs as:
+
+```js
+function printSummary(id) {
+    return fetchStudent(id).then(function onStudent(student){
+        console.log(student.name);
+        return student;
+    });
+}
+```
+
+plus: `printSummary` always returns a promise; a throw inside `onStudent` rejects that promise; `try` around the `await` is `.catch` on that job, not a sync `try` around `fetchStudent(id)` the call. Chapter 3's chain is still the machine. The compiler wrote the `.then`s so you would stop closing over `student` by hand.
+
+If that pair of listings does not look equivalent, stay here until it does. Chapter 6 will not make `await` more magic. It will put the same jobs on another heap.
+
 ## `await` Using And Resources
 
-As hosts grow `await using` (explicit resource management, a recent JS addition) for things that must be disposed -- file handles, locks -- the grain is: acquisition is `await`, release is deterministic at block exit, including on throw. If your environment has `await using`, use it instead of `try..finally` you forget to write. If it doesn't, `try..finally` is still the grammar from *Types & Grammar* Chapter 5.
+As hosts grow `await using` (explicit resource management) for things that must be disposed -- file handles, locks -- acquisition is `await`, and release is deterministic at block exit, including on throw. If your environment has `await using`, use it instead of `try..finally` you forget to write. If it doesn't, `try..finally` is still the grammar from *Types & Grammar* Chapter 5.
 
 ## The Shape Of A Program
 
@@ -424,4 +487,4 @@ Use serial when the next call *needs* the previous value (pagination: `url = dat
 
 Chapter 6 steps outside one event loop: workers, shared memory, scheduling against the frame budget, and the host APIs that make "later" concrete. You don't need workers for `printSummary`. You need them when the *current card* is too big to hold until paint.
 
-[^Await]: "6.2.4.2 Await ( value )", ECMAScript 2025 Language Specification; https://262.ecma-international.org/16.0/#await ; Accessed September 2026
+[^Await]: "27.7.5.3 Await ( value )", ECMAScript 2025 Language Specification; https://262.ecma-international.org/16.0/#await ; Accessed September 2026

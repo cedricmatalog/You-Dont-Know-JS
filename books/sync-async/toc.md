@@ -62,6 +62,10 @@
     * Microtasks And "It Still Interleaves"
     * `async` Methods And `this`
     * Don't `async` Everything
+    * Cancellation At The `await`
+    * Top-Level `await` Is Still A Job
+    * What The Compiler Wrote
+    * `await` Using And Resources
     * The Shape Of A Program
 * Chapter 6: Concurrent JS
     * Scheduling Against The Frame

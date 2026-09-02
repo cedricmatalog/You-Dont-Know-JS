@@ -140,7 +140,7 @@ That's flatter. It's still callback hell. The real complaints are:
 
 Walk `printSummary(73)` as cards, not as indentation.
 
-1. *Now:* `printSummary` calls `fetchStudent(73, onStudent)` and returns. The function that *looks* like it "prints a summary" has finished without printing. That's not a bug. That's the shape. The name is a lie until later.
+1. *Now:* `printSummary` calls `fetchStudent(73, onStudent)` and returns. The function that *looks* like it "prints a summary" has finished without printing. Not a bug. The shape. The name is a lie until later.
 2. *Later (task):* the fake network calls `onStudent(null, student)`. If we forget `if (err) return`, a failure still falls into `fetchEnrollments`. If we remember, we `return` and **nothing else in `printSummary` ever runs** -- no log, no recovery, no signal to a caller. `printSummary` returned `undefined` *now*; the caller has no promise to `.catch`. The error is a `console.error` we happened to write. Miss the `console.error` and the failure is silence.
 3. *Now (inside that later):* `onStudent` calls `fetchEnrollments(student.id, onEnrollments)` and ends. Another card scheduled. `student` is kept alive by **closure** -- `onEnrollments` will still see it. That's Book 2 doing Book 5's job.
 4. *Later still:* `onEnrollments` prints. If *this* `err` is missed, we `join` on `undefined` and throw on a turn whose `try` is long gone.
@@ -277,7 +277,7 @@ function onceLater(fn) {
 }
 ```
 
-Wrap a continuation with `onceLater` before handing it to a third party and you've bought: at most one call, always on a microtask, never Zalgo. You haven't bought structured errors, composition, or cancellation. That's the next chapters. But if you still have to live in callback APIs -- and you will: events, many DOM APIs, older Node -- this is the grain.
+Wrap a continuation with `onceLater` before handing it to a third party and you've bought: at most one call, always on a microtask, never Zalgo. You haven't bought structured errors, composition, or cancellation. Those are the next chapters. But if you still have to live in callback APIs -- and you will: events, many DOM APIs, older Node -- wrap them at the edge and stop there.
 
 Try it against a hostile fake:
 
@@ -325,7 +325,7 @@ button.addEventListener("click", function onClick(evt){
 });
 ```
 
-Event handlers are callbacks that can fire **zero or many** times. That's the correct model for clicks. It's the wrong model for "load this student," which should fire once. Using an EventEmitter for a one-shot I/O result is how you get listeners added too late (missed the event) or never removed (leaks).
+Event handlers are callbacks that can fire **zero or many** times. Correct for clicks. Wrong for "load this student," which should fire once. Using an EventEmitter for a one-shot I/O result is how you get listeners added too late (missed the event) or never removed (leaks).
 
 Rules of thumb:
 

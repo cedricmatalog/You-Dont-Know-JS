@@ -71,7 +71,7 @@ match(msg,{
 });
 ```
 
-That's a dictionary of functions plus a tag. Pattern matching in the language would destructure *and* check *and* maybe exhaust. Until it exists, this is the grain: one field you control, a table of behaviors, a loud default. Nested `if (x.type == "student" && x.id)` trees are how the exhaustiveness story gets lost.
+This is a dictionary of functions plus a tag. Pattern matching in the language would destructure *and* check *and* maybe exhaust. Until it exists, do this: one field you control, a table of behaviors, a loud default. Nested `if (x.type == "student" && x.id)` trees are how the exhaustiveness story gets lost.
 
 ## Composites -- Stage 1 (Successor To Records/Tuples)
 
@@ -177,7 +177,7 @@ Tonight without the tax: a function that receives the class or the method and re
 
 ### `using` And The Close You Were Going To Forget
 
-The interesting part is not the keyword. It is that dispose runs on *every* exit: `return`, `throw`, `break` from an outer labeled block if the `using` is in scope. That's the `finally` you keep forgetting in a classroom loader that opens a file, `await`s `fetchStudent`, and returns early on a missing id.
+The interesting part is not the keyword. It is that dispose runs on *every* exit: `return`, `throw`, `break` from an outer labeled block if the `using` is in scope. The `finally` you keep forgetting in a classroom loader that opens a file, `await`s `fetchStudent`, and returns early on a missing id.
 
 `await using` is for when close itself is later (`file.close()` that returns a promise). Mixing them -- sync `using` around async close -- hides a job. *Sync & Async* Chapter 5: if it is later, `await` it.
 
@@ -193,6 +193,26 @@ The interesting part is not the keyword. It is that dispose runs on *every* exit
 4. When a feature is **stage 2 or below**, treat articles about it as *design fiction*. Educational. Not a sprint ticket.
 5. Keep the pillars. A new operator still coerces. A new collection is still an object. A new async API still sits on the event loop.
 
+### Read One Proposal This Afternoon
+
+Open the explainer, not a Twitter thread. Write the Chapter 1 card while you read: problem, stage, engines, tonight, delete-by.
+
+For Temporal (already stage 4 -- this is practice on a feature you *can* ship): the problem is "Date is an instant pretending to be a calendar." The spec is a namespace of types, not a better `getMonth`. Tonight is polyfill until your baseline has `typeof Temporal == "object"`. Delete-by is a date on `BASELINE.md`.
+
+For a stage-2 pipe: the problem is "nested calls read inside-out." The spec is a grammar fight (Hack vs F#). Tonight is named `var`s. Delete-by is "when stage 4 *and* our engines parse it," not "when the plugin hits 1.0." If you cannot fill tonight without a compiler, you are not previewing JS. You are forking it.
+
+Spend the rest of the afternoon on *one* abstract operation the explainer names. Temporal's is `disambiguation`. Pipes' is how the topic binds. Decorators' is evaluation order vs `[[Define]]`. If the explainer has no operation you can name, it is still a slide deck.
+
+### After Stage 4, The Work Is Engines
+
+Stage 4 means "this is JS." It does not mean Safari 17 has it. The yearly snapshot is a PDF. Your users are engines.
+
+The year after Temporal's stage 4 is not a year of writing `Date` anyway "until everyone upgrades." It is a year of an adapter: `toInstant` at the log, `PlainDate` at the birthday, `Date` at the driver. The year after `Object.groupBy` is deleting lodash `groupBy` in the modules whose browserslist is green, not rewriting the app in a weekend.
+
+Keep a "delete this polyfill" date. When it passes and caniuse is still red for a browser you support, move the date. Do not let the date pass in silence so the polyfill becomes folklore.
+
+Records & Tuples went stage 2, got conference talks, then withdrew. The intern table in Chapter 3 is still the program. Userland that named the *problem* outlives the token. That is why this chapter lists problems first and stages second.
+
 ## You Still Don't Know JS *Yet*
 
 That's not an insult. It's the series title, and it's still true.
@@ -201,6 +221,6 @@ The language will grow. Some growth will delight you (Temporal should). Some wil
 
 If you can see a new proposal and ask, "which pillar does this touch? which abstract operation? which queue?" -- you don't need this sixth book updated every June. You can read the proposal yourself.
 
-That's the goal. Not to know JS. To know how to **keep knowing** it.
+The goal is not to know JS. It is to **keep knowing** it.
 
 Appendix A is the field card -- including the `BASELINE.md` this repo keeps at the root, so the practice has a file, not just a sermon. Appendix B is practice. Go write some code -- in last year's JS, unless your baseline says otherwise.

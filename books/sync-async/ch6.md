@@ -1,7 +1,7 @@
 # You Don't Know JS Yet: Sync & Async - 2nd Edition
 # Chapter 6: Concurrent JS
 
-One thread. One event loop. Run to completion. That's the JS you've been writing for five chapters, and it's still the default. This chapter is the rest of the runtime: how the host slices time, how you escape the main thread, and how you share memory when messages aren't enough.
+One thread. One event loop. Run to completion. This is the JS you've been writing for five chapters, and it's still the default. This chapter is the rest of the runtime: how the host slices time, how you escape the main thread, and how you share memory when messages aren't enough.
 
 None of this replaces promises. It *surrounds* them.
 
@@ -15,7 +15,7 @@ Tools:
 * **`queueMicrotask(..)`** -- soon, before paint. Too much microtask work *delays* paint. Not for big jobs.
 * **`setTimeout(fn, 0)` / `setImmediate` (Node)** -- next task(s). Coarse.
 * **`requestAnimationFrame(fn)`** -- before the next paint, for visual updates. Do not dump 50ms of JSON parse here; you'll jank the frame you were trying to catch.
-* **`scheduler.postTask(fn, { priority })`** (where implemented) -- prioritized tasks (`user-blocking`, `user-visible`, `background`) with `AbortSignal`. This is the grain the platform is moving toward for "run this JS, but be polite."
+* **`scheduler.postTask(fn, { priority })`** (where implemented) -- prioritized tasks (`user-blocking`, `user-visible`, `background`) with `AbortSignal`. The platform is moving toward this for "run this JS, but be polite."
 * **`requestIdleCallback(fn)`** -- leftover time in a frame. Best-effort, not guaranteed. Good for prefetch / analytics, bad for anything the user is waiting on.
 
 ```js
@@ -37,7 +37,7 @@ async function highlightNames(names,el) {
 }
 ```
 
-Fifty names, then yield for a frame, then fifty more. Without the `await`, 10,000 names is one card -- and a frozen textarea. With it, you're still on the main thread, still not parallel, but you *put the card down* every so often. That's the Chapter 1 lesson wearing a UI.
+Fifty names, then yield for a frame, then fifty more. Without the `await`, 10,000 names is one card -- and a frozen textarea. With it, you're still on the main thread, still not parallel, but you *put the card down* every so often. Chapter 1, wearing a UI.
 
 How do you know 50 is the right chunk? You don't, until you measure. 50 short strings is nothing. 50 rows of a 2MB JSON parse is everything. The number is not the lesson. The *yield point* is the lesson.
 
@@ -88,7 +88,7 @@ The `50` is not magic. Change it to `1` and you yield too often -- 10,000 frames
 
 ## Workers: Another Heap, Another Loop
 
-A **Web Worker** (or Node `worker_threads` worker) is another JS world: own global, own event loop, own heap.[^AgentClusters] It does not see your `window`, your DOM, your `currentUser` variable.
+A **Web Worker** (or Node `worker_threads` worker) is another JS world: own global, own event loop, own heap.[^Agents] It does not see your `window`, your DOM, your `currentUser` variable.
 
     <img src="images/fig3.svg" width="650" alt="Main thread and worker as two heaps and two event loops, connected only by postMessage">
 
@@ -123,7 +123,7 @@ The main thread stays responsive because `factor` isn't running there. You pay: 
 
 ### A Protocol, Not A Firehose
 
-Once two `printSummary`s can be in flight, `postMessage` without an id is a race. Name the requests:
+Once two `printSummary`s can be in flight, `postMessage` without an id is a race. Give each request an id:
 
 ```js
 // main
@@ -166,11 +166,11 @@ self.addEventListener("message", function onMsg(evt){
 
 Draw that on paper before you write it -- or look at the figure. The worker should not know about the DOM. The main thread should not know how `factor` works. The *id* is the only shared fiction. Errors have to be cloneable -- a real `Error` object may or may not survive structured clone depending on the engine and fields; sending `{ message }` is boring and reliable.
 
-If you skip the `Map` of pending jobs, the second call's result can fulfill the first call's promise. That's the kind of bug that only shows up under load. Chapter 1 said later is a different world. Two laters at once are two worlds, and they need name tags.
+If you skip the `Map` of pending jobs, the second call's result can fulfill the first call's promise. This bug only shows up under load. Chapter 1 said later is a different world. Two laters at once are two worlds, and they need name tags.
 
 ### Dedicated, Shared, Service -- Pick The Lifecycle
 
-**Dedicated workers** are 1:1 with the page (or Node thread) that spawned them. That's the default. When the page dies, they die.
+**Dedicated workers** are 1:1 with the page (or Node thread) that spawned them. Default. When the page dies, they die.
 
 **Shared workers** (browsers, where implemented) can be reached from several tabs of the same origin. Useful for a single websocket fan-in. Also useful for creating mysterious cross-tab bugs. Don't reach for them because "shared" sounds efficient.
 
@@ -446,7 +446,7 @@ function factorOnWorker(n,signal) {
 }
 ```
 
-The worker still has to *honor* `cancel` -- cooperative again. There is no preemption. A `factor` that never checks a flag will run to completion even after you aborted the promise. That's the same "later is a different world" lesson as a `fetch` you forgot to pass `signal` to. The promise rejected. The CPU kept going.
+The worker still has to *honor* `cancel` -- cooperative again. There is no preemption. A `factor` that never checks a flag will run to completion even after you aborted the promise. Same lesson as a `fetch` you forgot to pass `signal` to: later is a different world. The promise rejected. The CPU kept going.
 
 If you need to *kill* work, `worker.terminate()` kills the whole worker, in-flight jobs and all. That's a hammer. Recreate the worker after. Fine for "user navigated away." Not fine for "one of twenty factorizations was cancelled."
 
@@ -575,12 +575,12 @@ loadRoster(bigJSON).then(function show(rows){
 });
 ```
 
-Walk it. Don't skip.
+Read it. Don't skip.
 
 1. `loadRoster` runs *now* until the first `await`. It calls `askWorker("parse", jsonText)`, which *now* stores `{ resolve, reject }` in `pending` under id `1`, and `postMessage`s. Then `loadRoster` **puts its card down**. The click handler that called it can finish. Paint can happen.
 2. The worker's event loop -- a *different* now -- picks up `parse`, `JSON.parse`s, posts `{ id: 1, result: students }`.
 3. Main's `onMsg` looks up id `1`, calls `resolve(students)`. That fulfills the promise `loadRoster` was awaiting. `loadRoster` resumes as a **job** (microtask). `students` is a *clone*, not the worker's array.
-4. `Promise.all(students.map(..))` starts *N* `score` jobs. Each gets its own id. If you forgot the id, Kyle's score could land on Suzy's row. That's the race this whole section exists to make visceral.
+4. `Promise.all(students.map(..))` starts *N* `score` jobs. Each gets its own id. If you forgot the id, Kyle's score could land on Suzy's row. This race is why the section exists.
 5. Each `score` later comes back, `attach` builds a new object on the *main* heap, `Promise.all` joins, `show` paints.
 
 What did we *not* share? The worker never saw `console.log`. Main never ran `JSON.parse` on the big string (we still cloned it across -- the tax). `student` objects in `attach` are main-thread objects. Mutating them does not mutate anything in the worker. There is no closure across the heap. Closure is a *scope* link (*Scope & Closures*). A worker is a *copy* link. If you catch yourself thinking "the worker closed over `pending`," stop. `pending` lives only on main.
@@ -615,7 +615,7 @@ self.addEventListener("message", function onMsg(evt){
 });
 ```
 
-If `JSON.parse` throws, we still `postMessage` with `error` *and the same id*. Main rejects the right waiter. `loadRoster`'s `await askWorker("parse")` throws into whatever `try` you put around it -- Chapter 5. The `score` jobs never start. That's the sequential dependency: parse *feeds* score. `Promise.all` on scores is the concurrent part *after* you have an array.
+If `JSON.parse` throws, we still `postMessage` with `error` *and the same id*. Main rejects the right waiter. `loadRoster`'s `await askWorker("parse")` throws into whatever `try` you put around it -- Chapter 5. The `score` jobs never start. Parse *feeds* score: sequential. `Promise.all` on scores is the concurrent part *after* you have an array.
 
 If you `Promise.all([ askWorker("parse", ..), askWorker("score", 73) ])` you've concurrent-ized two things that aren't independent. Score needs an id from the roster. Concurrent is not "faster"; it's "doesn't need the other result." Chapter 5's waterfall lesson, now with a heap boundary in the middle.
 
@@ -695,7 +695,7 @@ The user clicked once. From their point of view there is one "load the roster" a
 
 If `show` paints 80,000 rows in one turn, you've spent the worker's gift. `chunked` from the start of this chapter still applies *after* the worker comes back. Offload and cooperative yielding are not alternatives. They stack.
 
-If the user clicks twice, you have two `loadRoster`s in flight, two overlapping id spaces (they share `nextID` -- good), and two `Promise.all`s. That's fine if each job has an id. That's a swapped-row bug if they don't. Chapter 1 said later is a different world. Two clicks are two laters that share one worker. Name the requests.
+If the user clicks twice, you have two `loadRoster`s in flight, two overlapping id spaces (they share `nextID` -- good), and two `Promise.all`s. Fine if each job has an id. If they don't, rows swap. Chapter 1 said later is a different world. Two clicks are two laters that share one worker. Give each request an id.
 
 If the user navigates away, `terminate` the worker and forget the `pending` `Map` -- those promises should reject, or you'll leak resolvers. `AbortSignal` on `loadRoster` that both `abort`s in-flight `fetch` *and* posts `cancel` / terminates is the same cancellation bus as Chapter 5, now with a second heap that does not read your mind.
 
@@ -721,6 +721,6 @@ Don't start a worker for `fetchStudent`. Do start one when `factorizeClassroomId
 
 Appendix B has exercises. Do them in an editor. Predicting `"A" "D" "C" "B"` on paper is not the same as shipping a waterfall by accident.
 
-[^AgentClusters]: "9.7 Agent Clusters and Atomics.wait", ECMAScript 2025 Language Specification; https://262.ecma-international.org/16.0/#sec-agent-clusters-and-atomicswait ; Accessed September 2026
+[^Agents]: "9.6 Agents", ECMAScript 2025 Language Specification; https://262.ecma-international.org/16.0/#sec-agents ; Accessed September 2026
 
 [^StructuredClone]: "2.9.4 Safe passing of structured data", HTML Living Standard; https://html.spec.whatwg.org/multipage/structured-data.html#safe-passing-of-structured-data ; Accessed September 2026

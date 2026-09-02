@@ -1,7 +1,7 @@
 # You Don't Know JS Yet: Sync & Async - 2nd Edition
 # Chapter 4: Iterators & Generators
 
-Asynchrony is about *later*. Iteration is about *the next one*. JS connects those ideas with a protocol: an object that can produce a sequence of values, one at a time, on demand. Once you can pause a sequence, you can pause it for a promise. That's the road to `async`/`await`.
+Asynchrony is about *later*. Iteration is about *the next one*. JS connects those ideas with a protocol: an object that can produce a sequence of values, one at a time, on demand. Once you can pause a sequence, you can pause it for a promise. That protocol is how we get to `async`/`await`.
 
 This chapter is the protocol and the syntax. Chapter 5 is the sugar. If you skip this chapter, `async function` will remain magic, and magic is how you misuse `await` in `forEach`. Stay here.
 

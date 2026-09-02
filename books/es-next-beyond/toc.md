@@ -77,6 +77,8 @@
         * Decorators Are A Compiler Tax Until They Aren't
         * `using` And The Close You Were Going To Forget
     * How To Watch Without Drowning
+        * Read One Proposal This Afternoon
+        * After Stage 4, The Work Is Engines
     * You Still Don't Know JS *Yet*
 * Appendix A: Exploring Further
     * There Is Still One JS

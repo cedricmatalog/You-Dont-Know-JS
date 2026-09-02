@@ -148,14 +148,20 @@ Suggested solution for "`?.` How Far?":
 
 ```js
 function firstCourse(student) {
-    if (student == null || typeof student != "object") {
-        return "none";
+    if (student == null) return "none";
+    if (typeof student != "object") {
+        throw new TypeError("student record required");
     }
     return student.enrollment?.courses?.[0] ?? "none";
 }
+
+firstCourse({ enrollment: { courses: [ "YDKJS" ] } }); // "YDKJS"
+firstCourse({ name: "Kyle" });                         // "none"
+firstCourse(null);                                     // "none"
+firstCourse(73);                                       // TypeError
 ```
 
-`?.` handles missing `enrollment` / `courses`. The `typeof` guard refuses to treat `73` as a silent `"none"` -- that's a bug, not a missing field. Six `?.` with no guard is how you hide the bug.
+`?.` handles missing `enrollment` / `courses`. The `typeof` guard **throws** for `73` -- that's a bug, not a missing field. Returning `"none"` for a number hid the bug the same way six `?.` with no guard would.
 
 Suggested solution for "`scheduleMeeting` With Temporal":
 
@@ -265,7 +271,7 @@ That's Map keys, Temporal types, stage discipline, `?.` depth, `scheduleMeeting`
 
 A passing Temporal `scheduleMeeting` uses `ZonedDateTime.compare` and `{ minutes }`. A passing sign-in uses `WeakSet` or `WeakMap`, not `obj[person]`. A passing `?.` guard still `typeof`s the student. If you missed those three, re-read Chapters 3--4 before arguing with the solutions.
 
-Keep a tab open on tc39/proposals. That's the real Appendix B for this book, every June.
+Keep a tab open on tc39/proposals. The real Appendix B for this book, every June.
 
 If `makeSignIn` used `obj[person.id]`, two `{ id: 14 }` objects collapsed. If `scheduleMeeting` used `Date`, DST and "90 minutes" became millis folklore. If `firstCourse(73)` returned `"none"`, you optional-chained a programming error. Three fail-closed checks. Compare your code to the suggestions, then keep the version that names the type.
 
@@ -273,7 +279,7 @@ If `makeSignIn` used `obj[person.id]`, two `{ id: 14 }` objects collapsed. If `s
 // fail-closed
 log.hasSignedIn({ id: 14, name: "Kyle" });  // false -- not kyleA
 scheduleMeeting("17:30",30,workDay);        // false -- compare ZonedDateTime
-firstCourse(73);                            // must not silently "none"
+firstCourse(73);                            // TypeError
 ```
 
 If all three pass, you practiced the book. If one fails, that's the chapter to re-read -- 3, 4, or 2 -- not a reason to skim the solutions for a paste. *Get Started* Appendix B said compare your approach. Same instruction. Different types.
@@ -286,15 +292,15 @@ Iterator.from(ids()).take(1).toArray();
 // exhaust: three yields, then slice
 ```
 
-That's Chapter 3's laziness drill in two lines. If both logs look the same in your head, you still think iterators are arrays. Spread makes an array. Helpers pull. Don't skip that exercise because Temporal looked bigger.
+Chapter 3's laziness drill in two lines. If both logs look the same in your head, you still think iterators are arrays. Spread makes an array. Helpers pull. Don't skip that exercise because Temporal looked bigger.
 
-Stage discipline has no code solution -- a paragraph in the team's README that names stage, pillar, tonight, and delete-by. If tonight is "ship the Babel plugin" for stage 2, rewrite tonight. That's the exercise people skip because it isn't a function. It's the book.
+Stage discipline has no code solution -- a paragraph in the team's README that names stage, pillar, tonight, and delete-by. If tonight is "ship the Babel plugin" for stage 2, rewrite tonight. People skip this exercise because it isn't a function. It's the book.
 
-Records/Tuples withdrew (April 2025). Composites are a narrower path. If your card still says "ship Records," update the card -- keep the intern-table snippet. Horizon features die. Userland that named the problem does not. That's Chapter 5 leaking into practice, on purpose.
+Records/Tuples withdrew (April 2025). Composites are a narrower path. If your card still says "ship Records," update the card -- keep the intern-table snippet. Horizon features die. Userland that named the problem does not. Chapter 5 leaking into practice.
 
 `import()` returns a promise now; the module evaluates later. If your log put `"later"` between two `"now"`s, collapse. Book 5 Chapter 1, then this drill again. Syntax is not timing.
 
-Keep the tab on tc39/proposals. Fill one card for whatever just jumped a stage the week you read this. If tonight is still userland, you practiced the book. If tonight is a plugin, you practiced a dialect. That's the last compare-your-approach.
+Keep the tab on tc39/proposals. Fill one card for whatever just jumped a stage the week you read this. If tonight is still userland, you practiced the book. If tonight is a plugin, you practiced a dialect. Last compare-your-approach.
 
 A passing card names a real stage you looked up, not a stage you remembered from this PDF. The PDF ages. The habit does not. That's *Get Started* Appendix B's "compare" aimed at June.
 

@@ -16,7 +16,7 @@ const FENCE = /```(?:js|javascript)[^\n]*\n([\s\S]*?)```/g;
 const ASSERT = /^(\s*)(.+?);\s*\/\/\s*(.+?)\s*$/;
 const SKIP_BLOCK = /\/\* *\.\.|\/\/ \.\.(?!\.)|NOT JS|sketch --|pretend this|proposed sketch|\bTODO\b|your code here/i;
 const ERROR_NAME = /^(SyntaxError|TypeError|RangeError|ReferenceError|Error)\b/;
-const SKIP_COMMENT = /Error!|-- |works |skip |lands |maybe |oops|thrown|throws TypeError/i;
+const SKIP_COMMENT = /Error!|works |skip |lands |maybe |oops|thrown|throws TypeError/i;
 
 function walk(dir, out = []) {
 	for (const name of readdirSync(dir)) {
@@ -30,7 +30,7 @@ function walk(dir, out = []) {
 }
 
 function parseExpected(comment) {
-	const c = comment.trim();
+	const c = comment.trim().split(/\s+--\s+/)[0].trim();
 	if (/^Error!$/.test(c)) return null;
 	if (/\bif\b/.test(c)) return null;
 	if (SKIP_COMMENT.test(c) && !ERROR_NAME.test(c)) return null;
@@ -40,7 +40,7 @@ function parseExpected(comment) {
 	if (/^(true|false|null|undefined|NaN|-?\d+(\.\d+)?n?)$/.test(c)) {
 		return { kind: "value", source: c };
 	}
-	if (/^["'`]/.test(c) && c.length < 80 && !c.includes(" -- ")) {
+	if (/^["'`]/.test(c) && c.length < 80) {
 		return { kind: "value", source: c };
 	}
 	return null;
