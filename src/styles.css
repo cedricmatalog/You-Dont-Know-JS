@@ -10,7 +10,7 @@
 	--code-ink: #1a2330;
 	--shadow: 0 18px 40px rgba(26, 35, 48, 0.08);
 	--rail: 17.5rem;
-	--prose: 64ch;
+	--prose: 68ch;
 	--font-display: "Bricolage Grotesque", sans-serif;
 	--font-body: "Literata", "Iowan Old Style", "Palatino Linotype", serif;
 	--font-mono: "IBM Plex Mono", ui-monospace, monospace;
@@ -45,6 +45,9 @@ html {
 	line-height: 1.55;
 	scroll-behavior: smooth;
 	-webkit-text-size-adjust: 100%;
+	caret-color: var(--ember);
+	scrollbar-color: color-mix(in srgb, var(--scope) 55%, var(--line)) transparent;
+	scrollbar-width: thin;
 }
 
 @media (min-width: 700px) {
@@ -89,6 +92,11 @@ a:hover {
 :focus-visible {
 	outline: 2px solid var(--ember);
 	outline-offset: 3px;
+}
+
+::selection {
+	background: color-mix(in srgb, var(--ember) 32%, var(--paper));
+	color: var(--ink);
 }
 
 .skip-link {
@@ -214,8 +222,14 @@ a:hover {
 }
 
 .icon-btn:hover,
-.text-btn:hover {
+.text-btn:hover:not(:disabled) {
 	color: var(--ember);
+}
+
+.text-btn:disabled {
+	opacity: 0.35;
+	cursor: not-allowed;
+	color: var(--muted);
 }
 
 .btn {
@@ -259,8 +273,7 @@ a:hover {
 }
 
 .eyebrow,
-.kicker,
-.rail-kicker {
+.kicker {
 	margin: 0 0 0.7rem;
 	font-family: var(--font-mono);
 	font-size: 0.72rem;
@@ -273,9 +286,9 @@ a:hover {
 .book-hero h1 {
 	margin: 0;
 	font-family: var(--font-display);
-	font-size: clamp(3.1rem, 9vw, 6.6rem);
+	font-size: clamp(3.1rem, 9vw, 6rem);
 	line-height: 0.86;
-	letter-spacing: -0.07em;
+	letter-spacing: -0.04em;
 	font-weight: 800;
 	text-wrap: balance;
 }
@@ -411,7 +424,7 @@ a:hover {
 	display: grid;
 	place-items: center;
 	padding: 0 1.1rem;
-	border-left: 1px solid var(--line);
+	background: color-mix(in srgb, var(--scope) 8%, transparent);
 	text-decoration: none;
 	font-family: var(--font-display);
 	font-weight: 700;
@@ -491,6 +504,7 @@ a:hover {
 .mins {
 	font-family: var(--font-mono);
 	font-size: 0.72rem;
+	font-variant-numeric: tabular-nums;
 	color: var(--muted);
 }
 
@@ -687,8 +701,8 @@ a:hover {
 
 .prose blockquote {
 	margin: 1.3rem 0;
-	padding: 0.1rem 0 0.1rem 1rem;
-	border-left: 3px solid var(--gold);
+	padding: 0.7rem 0 0.15rem;
+	border-top: 1px solid color-mix(in srgb, var(--gold) 50%, var(--line));
 	color: var(--muted);
 	font-style: italic;
 }
@@ -742,7 +756,6 @@ a:hover {
 	margin: 1.3rem 0;
 	padding: 0.95rem 1rem 0.2rem;
 	border: 1px solid var(--line);
-	border-left: 4px solid var(--scope);
 	background: color-mix(in srgb, var(--scope) 7%, var(--paper));
 }
 
@@ -753,16 +766,23 @@ a:hover {
 	font-family: var(--font-mono);
 	font-size: 0.7rem;
 	letter-spacing: 0.1em;
+	color: var(--scope);
 }
 
 .callout-tip {
-	border-left-color: var(--gold);
 	background: color-mix(in srgb, var(--gold) 10%, var(--paper));
 }
 
+.callout-tip::before {
+	color: var(--gold);
+}
+
 .callout-warning {
-	border-left-color: var(--ember);
 	background: color-mix(in srgb, var(--ember) 9%, var(--paper));
+}
+
+.callout-warning::before {
+	color: var(--ember);
 }
 
 .prose table {
@@ -830,6 +850,14 @@ a:hover {
 	font: inherit;
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
+	min-height: 44px;
+	min-width: 44px;
+	padding: 0 0.35rem;
+	touch-action: manipulation;
+}
+
+.copy-code:hover {
+	color: var(--ember);
 }
 
 .prose pre {
@@ -940,7 +968,6 @@ a:hover {
 	background: transparent;
 	color: inherit;
 	font: 16px/1.4 var(--font-display);
-	outline: none;
 }
 
 .search-results {
@@ -1048,7 +1075,9 @@ a:hover {
 	}
 
 	html.rail-open,
-	html.rail-open body {
+	html.rail-open body,
+	html.search-open,
+	html.search-open body {
 		overflow: hidden;
 	}
 
@@ -1081,7 +1110,7 @@ a:hover {
 	}
 
 	.spine-read {
-		border-left: 0;
+		background: transparent;
 		border-top: 1px solid var(--line);
 		min-height: 44px;
 		padding: 0.85rem;
@@ -1146,17 +1175,6 @@ a:hover {
 
 	.brand-name {
 		display: none;
-	}
-
-	.icon-btn,
-	.text-btn {
-		min-width: 40px;
-		min-height: 40px;
-	}
-
-	.icon-btn {
-		width: 40px;
-		height: 40px;
 	}
 
 	.topbar-right [data-theme-toggle] {
