@@ -121,6 +121,15 @@
 	color: var(--ink);
 }
 
+.rail-h.is-here {
+	color: var(--ink);
+	font-weight: 700;
+}
+
+.rail-h2.is-here {
+	color: var(--ink);
+}
+
 .rail:focus {
 	outline: none;
 }

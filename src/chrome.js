@@ -159,8 +159,10 @@ export function setRail(open) {
 	}
 	if (open && drawer) {
 		railOpener = document.activeElement;
+		const here = app.querySelector(".rail-h.is-here");
 		const first = railFocusables()[0];
-		(first ?? app.querySelector("[data-rail-panel]"))?.focus();
+		(here ?? first ?? app.querySelector("[data-rail-panel]"))?.focus();
+		here?.scrollIntoView({ block: "nearest" });
 	} else if (!open) {
 		if (drawer && railOpener && typeof railOpener.focus === "function") railOpener.focus();
 		railOpener = null;

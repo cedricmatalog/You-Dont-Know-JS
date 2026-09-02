@@ -147,7 +147,7 @@ function railHtml(loc, headings) {
 							? headings
 									.map(
 										(heading) => `
-								<a class="rail-h rail-h${heading.depth}" href="#/${book.id}/${item.id}/${heading.id}">${esc(heading.text)}</a>
+								<a class="rail-h rail-h${heading.depth}" href="#/${book.id}/${item.id}/${heading.id}" data-heading="${esc(heading.id)}">${esc(heading.text)}</a>
 							`,
 									)
 									.join("")

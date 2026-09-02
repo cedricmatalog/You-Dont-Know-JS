@@ -83,10 +83,45 @@ export function bindScroll(route) {
 		if (finish) finish.hidden = !(ratio >= 0.92 && !done);
 		if (unread) unread.hidden = !done;
 	};
+	const headings = [...app.querySelectorAll(".prose h2[id], .prose h3[id], .prose h4[id]")];
+	const railLinks = [...app.querySelectorAll(".rail-h[data-heading]")];
+	let activeHeading = null;
+	const readingLine = () => {
+		const progress = app.querySelector(".reader-progress");
+		return progress ? progress.getBoundingClientRect().bottom + 28 : 96;
+	};
+	const keepRailInView = (link) => {
+		const rail = app.querySelector("[data-rail-panel]");
+		if (!rail || !link) return;
+		const railBox = rail.getBoundingClientRect();
+		const linkBox = link.getBoundingClientRect();
+		if (linkBox.top < railBox.top + 12) rail.scrollTop += linkBox.top - railBox.top - 12;
+		else if (linkBox.bottom > railBox.bottom - 12) rail.scrollTop += linkBox.bottom - railBox.bottom + 12;
+	};
+	const spy = () => {
+		if (!headings.length || !railLinks.length) return;
+		const line = readingLine();
+		let current = null;
+		for (const heading of headings) {
+			if (heading.getBoundingClientRect().top <= line) current = heading;
+			else break;
+		}
+		const id = current?.id ?? null;
+		if (id === activeHeading) return;
+		activeHeading = id;
+		for (const link of railLinks) {
+			const here = link.dataset.heading === id;
+			link.classList.toggle("is-here", here);
+			if (here) link.setAttribute("aria-current", "location");
+			else link.removeAttribute("aria-current");
+			if (here) keepRailInView(link);
+		}
+	};
 	const onScroll = () => {
 		const max = document.documentElement.scrollHeight - window.innerHeight;
 		const ratio = max <= 0 ? 1 : Math.min(1, window.scrollY / max);
 		paint(ratio);
+		spy();
 		if (!ready) return;
 		clearTimeout(persistTimer);
 		persistTimer = window.setTimeout(() => persist(ratio), 200);
@@ -109,6 +144,7 @@ export function bindScroll(route) {
 		const apply = () => {
 			const max = document.documentElement.scrollHeight - window.innerHeight;
 			if (max > 0) window.scrollTo(0, last.scroll * max);
+			spy();
 		};
 		apply();
 		window.requestAnimationFrame(apply);
