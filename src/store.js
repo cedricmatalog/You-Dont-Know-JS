@@ -48,14 +48,24 @@ export const store = {
 		write(data);
 		return data;
 	},
-	setChapterProgress(bookId, chapterId, ratio, { allowDone = true } = {}) {
+	setChapterProgress(bookId, chapterId, ratio) {
 		const data = read();
 		if (!data.progress[bookId]) data.progress[bookId] = {};
 		const prev = data.progress[bookId][chapterId] ?? { max: 0, done: false };
-		const max = Math.max(prev.max, ratio);
 		data.progress[bookId][chapterId] = {
-			max,
-			done: allowDone && (prev.done || max >= 0.92),
+			max: Math.max(prev.max, ratio),
+			done: prev.done,
+		};
+		write(data);
+		return data;
+	},
+	setChapterDone(bookId, chapterId, done) {
+		const data = read();
+		if (!data.progress[bookId]) data.progress[bookId] = {};
+		const prev = data.progress[bookId][chapterId] ?? { max: 0, done: false };
+		data.progress[bookId][chapterId] = {
+			max: done ? Math.max(prev.max, 1) : prev.max,
+			done,
 		};
 		write(data);
 		return data;

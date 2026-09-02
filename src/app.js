@@ -58,10 +58,26 @@ function applyPrefs() {
 	document.documentElement.style.setProperty("--font-scale", String(prefs.fontScale));
 }
 
+function announce(message) {
+	const live = app.querySelector("[data-live]");
+	if (!live) return;
+	live.textContent = "";
+	window.requestAnimationFrame(() => {
+		live.textContent = message;
+	});
+}
+
+function themeSpoken(theme) {
+	if (theme === "night") return "Night";
+	if (theme === "day") return "Day";
+	return "Auto, matching the system";
+}
+
 function setTheme(theme) {
 	store.setTheme(theme);
 	applyPrefs();
 	syncReadMenu();
+	announce(`Theme ${themeSpoken(theme)}.`);
 }
 
 function marbleStatus(state, here = false) {
@@ -100,7 +116,8 @@ function cycleFont(dir) {
 	const next = FONT_STEPS[Math.min(FONT_STEPS.length - 1, Math.max(0, fontStepIndex() + dir))];
 	store.setFontScale(next);
 	applyPrefs();
-	syncFontButtons();
+	syncReadMenu();
+	announce(`Type size ${fontStepIndex() + 1} of ${FONT_STEPS.length}.`);
 }
 
 function syncFontButtons() {
@@ -124,22 +141,23 @@ function readMenuHtml(view) {
 	const fontIndex = fontStepIndex();
 	const hint =
 		view === "read"
-			? `<p class="read-hint"><kbd>/</kbd> search · <kbd>[</kbd> <kbd>]</kbd> chapters</p>`
-			: `<p class="read-hint"><kbd>/</kbd> or <kbd>⌘K</kbd> search</p>`;
+			? `<p class="read-hint"><kbd>/</kbd> search · <kbd>[</kbd> <kbd>]</kbd> chapters · <kbd>?</kbd> keys</p>`
+			: `<p class="read-hint"><kbd>/</kbd> or <kbd>⌘K</kbd> search · <kbd>?</kbd> keys</p>`;
 	return `
 		<div class="read-menu">
-			<button class="text-btn" type="button" data-read-menu aria-expanded="false" aria-controls="read-panel" aria-haspopup="true">Read</button>
+			<button class="text-btn" type="button" data-read-menu aria-expanded="false" aria-controls="read-panel" aria-haspopup="true" aria-label="Type size and theme">Display</button>
 			<div class="read-panel" id="read-panel" hidden>
 				<p class="read-legend" id="type-legend">Type</p>
 				<div class="read-row" role="group" aria-labelledby="type-legend">
 					<button class="text-btn" type="button" data-font="-1" aria-label="Decrease type size"${fontIndex <= 0 ? " disabled" : ""}>A−</button>
 					<button class="text-btn" type="button" data-font="1" aria-label="Increase type size"${fontIndex >= FONT_STEPS.length - 1 ? " disabled" : ""}>A+</button>
 				</div>
+				<p class="read-step" data-type-step>Size ${fontIndex + 1} of ${FONT_STEPS.length}</p>
 				<p class="read-legend" id="theme-legend">Theme</p>
 				<div class="read-row" role="radiogroup" aria-labelledby="theme-legend">
-					<button class="text-btn" type="button" data-theme-set="system" aria-pressed="${prefs.theme === "system"}">Auto</button>
-					<button class="text-btn" type="button" data-theme-set="day" aria-pressed="${prefs.theme === "day"}">Day</button>
-					<button class="text-btn" type="button" data-theme-set="night" aria-pressed="${prefs.theme === "night"}">Night</button>
+					<button class="text-btn" type="button" role="radio" data-theme-set="system" aria-checked="${prefs.theme === "system"}">Auto</button>
+					<button class="text-btn" type="button" role="radio" data-theme-set="day" aria-checked="${prefs.theme === "day"}">Day</button>
+					<button class="text-btn" type="button" role="radio" data-theme-set="night" aria-checked="${prefs.theme === "night"}">Night</button>
 				</div>
 				${hint}
 			</div>
@@ -150,9 +168,11 @@ function readMenuHtml(view) {
 function syncReadMenu() {
 	const prefs = store.get();
 	app.querySelectorAll("[data-theme-set]").forEach((btn) => {
-		btn.setAttribute("aria-pressed", btn.dataset.themeSet === prefs.theme ? "true" : "false");
+		btn.setAttribute("aria-checked", btn.dataset.themeSet === prefs.theme ? "true" : "false");
 	});
 	syncFontButtons();
+	const step = app.querySelector("[data-type-step]");
+	if (step) step.textContent = `Size ${fontStepIndex() + 1} of ${FONT_STEPS.length}`;
 }
 
 function setReadMenu(open) {
@@ -161,13 +181,14 @@ function setReadMenu(open) {
 	if (!panel || !toggle) return;
 	panel.hidden = !open;
 	toggle.setAttribute("aria-expanded", open ? "true" : "false");
+	if (open) panel.querySelector("button:not([disabled])")?.focus();
 }
 
 function topbar({ title, bookId, view }) {
 	return `
 		<header class="topbar">
 			<div class="topbar-left">
-				${bookId ? `<button class="icon-btn rail-toggle" type="button" data-rail aria-label="Table of contents" aria-expanded="false" aria-controls="toc-rail">${iconMenu()}</button>` : ""}
+				${bookId ? `<button class="text-btn rail-toggle" type="button" data-rail aria-expanded="false" aria-controls="toc-rail">${iconMenu()} Contents</button>` : ""}
 				<a class="brand" href="#/">
 					<span class="brand-mark" aria-hidden="true"></span>
 					<span class="brand-name">YDKJS<span>Yet</span></span>
@@ -177,6 +198,7 @@ function topbar({ title, bookId, view }) {
 			<div class="topbar-right">
 				${readMenuHtml(view)}
 				<button class="text-btn search-open" type="button" data-search-open aria-expanded="false" aria-controls="search-dialog">${iconSearch()} Search</button>
+				<button class="text-btn" type="button" data-keys-open aria-expanded="false" aria-controls="keys-dialog">Keys</button>
 			</div>
 		</header>
 	`;
@@ -192,22 +214,55 @@ function searchModal() {
 					<button type="button" class="text-btn" data-search-close>Close</button>
 				</div>
 				<div class="search-results" data-search-results aria-live="polite">
-					<p class="search-hint">Try <em>closure</em>, <em>coercion</em>, or <em>event loop</em>. <kbd>/</kbd> opens search.</p>
+					<p class="search-hint">Try <em>closure</em>, <em>coercion</em>, or <em>event loop</em>. <kbd>/</kbd> opens search. <kbd>?</kbd> lists keys.</p>
 				</div>
 			</div>
 		</div>
 	`;
 }
 
+function keysModal() {
+	return `
+		<div class="keys" hidden data-keys>
+			<div class="keys-panel" id="keys-dialog" role="dialog" aria-modal="true" aria-labelledby="keys-title">
+				<h2 id="keys-title">Keys</h2>
+				<dl class="keys-list">
+					<div><dt><kbd>/</kbd> or <kbd>⌘K</kbd></dt><dd>Search all six books</dd></div>
+					<div><dt><kbd>[</kbd> <kbd>]</kbd></dt><dd>Previous or next chapter</dd></div>
+					<div><dt><kbd>?</kbd></dt><dd>This list</dd></div>
+					<div><dt><kbd>Esc</kbd></dt><dd>Close search, contents, display, or this list</dd></div>
+				</dl>
+				<p class="keys-note">Empty marble: not started. Ember ring: this chapter. Gold: finished. Continue on the library returns you to the last paragraph.</p>
+				<button type="button" class="text-btn" data-keys-close>Close</button>
+			</div>
+		</div>
+		<p class="sr-only" data-live aria-live="polite" aria-atomic="true"></p>
+	`;
+}
+
+function chromeExtras() {
+	return `${searchModal()}${keysModal()}`;
+}
+
+function seriesAllFinished() {
+	return books.every((book) => store.bookProgress(book.id, book.chapters.length) >= 1 - 1e-9);
+}
+
 function libraryView() {
 	const last = store.get().last;
 	const resume = last && getChapter(last.bookId, last.chapterId);
+	const finished = seriesAllFinished();
+	const lede = finished
+		? "Every part in this checkout is marked finished. Open a spine to reread, or mark a chapter unread."
+		: resume
+			? `Continue returns you to ${resume.chapter.title} in ${resume.book.title}, at the last paragraph.`
+			: "Open a spine to see its parts. Progress saves as you read; Continue will bring you back.";
 	return `
 		${topbar({ title: "Library", view: "library" })}
 		<main id="main" class="library" tabindex="-1">
 			<header class="masthead">
 				<h1>You Don’t Know JS Yet</h1>
-				<p class="lede">Six books in this checkout. Open a spine to see its parts.</p>
+				<p class="lede">${esc(lede)}</p>
 				${
 					resume
 						? `<a class="btn btn-primary" href="#/${resume.book.id}/${resume.chapter.id}" aria-label="Continue ${esc(resume.chapter.title)} in ${esc(resume.book.title)}">Continue ${esc(resume.chapter.title)}</a>`
@@ -243,7 +298,7 @@ function libraryView() {
 				<p>© 2019–2026 Kyle Simpson. CC BY-NC-ND 4.0. This reader is a local study app for the markdown sources.</p>
 			</footer>
 		</main>
-		${searchModal()}
+		${chromeExtras()}
 	`;
 }
 
@@ -291,7 +346,7 @@ async function bookView(bookId) {
 				${rows.join("")}
 			</ol>
 		</main>
-		${searchModal()}
+		${chromeExtras()}
 	`;
 }
 
@@ -304,7 +359,7 @@ function missingView(route) {
 				<p>No chapter named “${esc(route.attempted)}” in ${esc(book.title)}.</p>
 				<p><a href="#/${book.id}">Back to ${esc(book.title)}</a></p>
 			</main>
-			${searchModal()}
+			${chromeExtras()}
 		`;
 	}
 	return `
@@ -313,7 +368,7 @@ function missingView(route) {
 			<p>No book named “${esc(route.attempted)}” in this checkout.</p>
 			<p><a href="#/">Back to the library</a></p>
 		</main>
-		${searchModal()}
+		${chromeExtras()}
 	`;
 }
 
@@ -361,8 +416,8 @@ async function readerView(route) {
 	if (!markdown) {
 		return `
 			${topbar({ title: "Missing chapter", view: "missing" })}
-			<main id="main" class="missing" tabindex="-1"><p>This chapter file is missing.</p><a href="#/">Back to the library</a></main>
-			${searchModal()}
+			<main id="main" class="missing" tabindex="-1"><p>This chapter file is missing from the book folder.</p><p><a href="#/${route.bookId}">Back to ${esc(getBook(route.bookId).title)}</a></p></main>
+			${chromeExtras()}
 		`;
 	}
 	const html = renderMarkdown(markdown, {
@@ -382,6 +437,7 @@ async function readerView(route) {
 		: loc.book.num < 6
 			? `Next book: ${books[loc.book.num].title}`
 			: "Back to the library";
+	const seriesEnd = !loc.next && loc.book.num === 6;
 
 	const place = chapterPlace(loc.book, loc.chapter.id);
 	const done = store.chapterState(loc.book.id, loc.chapter.id).done;
@@ -410,15 +466,19 @@ async function readerView(route) {
 				<article class="prose" data-prose>
 					<p class="kicker">${esc(place.label)} · ${mins} min read · ${place.n} of ${place.total}</p>
 					${html}
-					<p class="unread-wrap"${done ? "" : " hidden"}><button class="text-btn" type="button" data-unread="${loc.book.id}/${loc.chapter.id}">Mark unread</button></p>
+					<p class="unread-wrap">
+						<button class="text-btn" type="button" data-finish="${loc.book.id}/${loc.chapter.id}" hidden>Mark finished</button>
+						<button class="text-btn" type="button" data-unread="${loc.book.id}/${loc.chapter.id}"${done ? "" : " hidden"}>Mark unread</button>
+					</p>
 				</article>
+				${seriesEnd ? `<p class="series-end">That is the last part in this checkout.</p>` : ""}
 				<nav class="pager" aria-label="Adjacent chapters">
 					<a href="${prevHref}">${loc.prev ? `← ${esc(loc.prev.title)}` : `← ${esc(loc.book.title)}`}</a>
 					<a href="${nextHref}">${esc(nextLabel)} →</a>
 				</nav>
 			</main>
 		</div>
-		${searchModal()}
+		${chromeExtras()}
 	`;
 }
 
@@ -475,10 +535,9 @@ function bindScroll(route) {
 	let persistTimer = 0;
 	let lastRatio = 0;
 	let ready = false;
-	unreadHold = false;
 	const persist = (ratio) => {
 		store.setLast(route.bookId, route.chapterId, ratio);
-		store.setChapterProgress(route.bookId, route.chapterId, ratio, { allowDone: !unreadHold });
+		store.setChapterProgress(route.bookId, route.chapterId, ratio);
 	};
 	const paint = (ratio) => {
 		lastRatio = ratio;
@@ -489,13 +548,13 @@ function bindScroll(route) {
 		if (status && place) {
 			status.textContent = `${place.label} · ${place.n} of ${place.total} · ${Math.round(ratio * 100)}%`;
 		}
-		const done = unreadHold
-			? false
-			: ratio >= 0.92 || store.chapterState(route.bookId, route.chapterId).done;
+		const done = store.chapterState(route.bookId, route.chapterId).done;
 		app.querySelectorAll(".rail-item.is-active .marble").forEach((el) => {
 			el.classList.toggle("is-done", done);
 		});
-		const unread = app.querySelector(".unread-wrap");
+		const finish = app.querySelector("[data-finish]");
+		const unread = app.querySelector("[data-unread]");
+		if (finish) finish.hidden = !(ratio >= 0.92 && !done);
 		if (unread) unread.hidden = !done;
 	};
 	const onScroll = () => {
@@ -508,7 +567,10 @@ function bindScroll(route) {
 	};
 	window.addEventListener("scroll", onScroll, { passive: true });
 	const last = store.get().last;
+	const jumpQuery = sessionStorage.getItem("ydkjs-jump");
+	if (jumpQuery) sessionStorage.removeItem("ydkjs-jump");
 	const restore =
+		!jumpQuery &&
 		!route.heading &&
 		last &&
 		last.bookId === route.bookId &&
@@ -518,11 +580,17 @@ function bindScroll(route) {
 		const target = document.getElementById(route.heading);
 		if (target) target.scrollIntoView();
 	} else if (restore) {
-		const max = document.documentElement.scrollHeight - window.innerHeight;
-		if (max > 0) window.scrollTo(0, last.scroll * max);
+		const apply = () => {
+			const max = document.documentElement.scrollHeight - window.innerHeight;
+			if (max > 0) window.scrollTo(0, last.scroll * max);
+		};
+		apply();
+		window.requestAnimationFrame(apply);
 	}
 	onScroll();
 	ready = true;
+	if (jumpQuery) revealQuery(jumpQuery);
+	else if (restore) announce(`Returned to ${Math.round(last.scroll * 100)} percent in this chapter.`);
 	scrollCleanup = () => {
 		window.removeEventListener("scroll", onScroll);
 		clearTimeout(persistTimer);
@@ -533,7 +601,7 @@ function bindScroll(route) {
 
 let searchOpener = null;
 let railOpener = null;
-let unreadHold = false;
+let keysOpener = null;
 
 function railIsDrawer() {
 	return window.matchMedia("(max-width: 980px)").matches;
@@ -570,6 +638,29 @@ function trapRailTab(event) {
 	return false;
 }
 
+function revealQuery(query) {
+	const prose = app.querySelector("[data-prose]");
+	if (!prose || !query) return;
+	const needle = query.toLowerCase();
+	const walker = document.createTreeWalker(prose, NodeFilter.SHOW_TEXT);
+	while (walker.nextNode()) {
+		const node = walker.currentNode;
+		const text = node.textContent;
+		const at = text.toLowerCase().indexOf(needle);
+		if (at < 0) continue;
+		const mark = document.createElement("mark");
+		mark.className = "search-mark";
+		const after = node.splitText(at);
+		after.splitText(needle.length);
+		mark.appendChild(after);
+		node.parentNode.insertBefore(mark, node.nextSibling);
+		mark.scrollIntoView({ block: "center" });
+		announce(`Jumped to “${query}” in this chapter.`);
+		return;
+	}
+	announce(`Opened the chapter. “${query}” is not in the rendered text.`);
+}
+
 function searchFocusables(root) {
 	return [...root.querySelectorAll("a[href], button:not([disabled]), input")].filter(
 		(el) => !el.hidden && el.getAttribute("aria-hidden") !== "true",
@@ -584,6 +675,7 @@ function openSearch() {
 		setRail(false);
 	}
 	setReadMenu(false);
+	closeKeys();
 	searchOpener = document.activeElement;
 	root.hidden = false;
 	document.documentElement.classList.add("search-open");
@@ -601,6 +693,29 @@ function closeSearch() {
 	app.querySelector("[data-search-open]")?.setAttribute("aria-expanded", "false");
 	if (searchOpener && typeof searchOpener.focus === "function") searchOpener.focus();
 	searchOpener = null;
+}
+
+function openKeys() {
+	const root = app.querySelector("[data-keys]");
+	if (!root) return;
+	closeSearch();
+	setReadMenu(false);
+	setRail(false);
+	keysOpener = document.activeElement;
+	root.hidden = false;
+	document.documentElement.classList.add("keys-open");
+	app.querySelector("[data-keys-open]")?.setAttribute("aria-expanded", "true");
+	root.querySelector("[data-keys-close]")?.focus();
+}
+
+function closeKeys() {
+	const root = app.querySelector("[data-keys]");
+	if (!root || root.hidden) return;
+	root.hidden = true;
+	document.documentElement.classList.remove("keys-open");
+	app.querySelector("[data-keys-open]")?.setAttribute("aria-expanded", "false");
+	if (keysOpener && typeof keysOpener.focus === "function") keysOpener.focus();
+	keysOpener = null;
 }
 
 let searchDocs = null;
@@ -641,7 +756,7 @@ async function runSearch(query) {
 	if (!box) return;
 	const q = query.trim().toLowerCase();
 	if (q.length < 2) {
-		box.innerHTML = `<p class="search-hint">Type two or more characters.</p>`;
+		box.innerHTML = `<p class="search-hint">Type two or more characters. <kbd>?</kbd> lists keys.</p>`;
 		return;
 	}
 	box.innerHTML = `<p class="search-hint">Searching…</p>`;
@@ -663,7 +778,7 @@ async function runSearch(query) {
 		.map(
 			(hit) => `
 			<li>
-				<a class="search-hit" href="#/${hit.book.id}/${hit.chapter.id}">
+				<a class="search-hit" href="#/${hit.book.id}/${hit.chapter.id}" data-jump="${esc(query.trim())}">
 					<small>${esc(hit.book.title)} · ${esc(chapterLabel(hit.chapter))}</small>
 					<strong>${esc(hit.chapter.title)}</strong>
 					<span>${esc(hit.snippet)}</span>
@@ -711,6 +826,43 @@ function bindChrome() {
 	app.querySelector("#read-panel")?.addEventListener("click", (event) => event.stopPropagation());
 	app.querySelector("[data-search-open]")?.addEventListener("click", openSearch);
 	app.querySelector("[data-search-close]")?.addEventListener("click", closeSearch);
+	app.querySelector("[data-keys-open]")?.addEventListener("click", openKeys);
+	app.querySelector("[data-keys-close]")?.addEventListener("click", closeKeys);
+	app.querySelectorAll("[data-finish]").forEach((btn) => {
+		btn.addEventListener("click", (event) => {
+			event.preventDefault();
+			const [bookId, chapterId] = btn.dataset.finish.split("/");
+			store.setChapterDone(bookId, chapterId, true);
+			announce("Chapter marked finished.");
+			btn.hidden = true;
+			const unread = app.querySelector("[data-unread]");
+			if (unread) unread.hidden = false;
+			app.querySelector(".rail-item.is-active .marble")?.classList.add("is-done");
+			const loc = getChapter(bookId, chapterId);
+			const small = app.querySelector(".rail-item.is-active small");
+			if (small && loc) {
+				small.textContent = `${chapterLabel(loc.chapter)} · ${marbleStatus({ max: 1, done: true }, true)}`;
+			}
+		});
+	});
+	const keysRoot = app.querySelector("[data-keys]");
+	keysRoot?.addEventListener("click", (event) => {
+		if (event.target.matches("[data-keys]")) closeKeys();
+	});
+	keysRoot?.addEventListener("keydown", (event) => {
+		if (event.key !== "Tab" || !keysRoot || keysRoot.hidden) return;
+		const items = searchFocusables(keysRoot);
+		if (!items.length) return;
+		const first = items[0];
+		const last = items[items.length - 1];
+		if (event.shiftKey && document.activeElement === first) {
+			event.preventDefault();
+			last.focus();
+		} else if (!event.shiftKey && document.activeElement === last) {
+			event.preventDefault();
+			first.focus();
+		}
+	});
 	app.querySelectorAll("[data-unread]").forEach((btn) => {
 		btn.addEventListener("click", (event) => {
 			event.preventDefault();
@@ -722,8 +874,11 @@ function bindChrome() {
 				render();
 				return;
 			}
-			unreadHold = true;
-			app.querySelector(".unread-wrap")?.setAttribute("hidden", "");
+			announce("Chapter marked unread.");
+			app.querySelector("[data-unread]")?.setAttribute("hidden", "");
+			const pct = Number(app.querySelector("[data-progress-meter]")?.getAttribute("aria-valuenow") ?? 0);
+			const finish = app.querySelector("[data-finish]");
+			if (finish) finish.hidden = pct < 92;
 			app.querySelector(".rail-item.is-active .marble")?.classList.remove("is-done");
 			const loc = getChapter(bookId, chapterId);
 			const small = app.querySelector(".rail-item.is-active small");
@@ -735,6 +890,8 @@ function bindChrome() {
 	const searchRoot = app.querySelector("[data-search]");
 	searchRoot?.addEventListener("click", (event) => {
 		if (event.target.matches("[data-search]")) closeSearch();
+		const jump = event.target.closest("[data-jump]");
+		if (jump) sessionStorage.setItem("ydkjs-jump", jump.dataset.jump);
 	});
 	searchRoot?.addEventListener("keydown", (event) => {
 		if (event.key !== "Tab" || !searchRoot || searchRoot.hidden) return;
@@ -782,6 +939,7 @@ async function render() {
 	scrollCleanup?.();
 	setRail(false);
 	setReadMenu(false);
+	closeKeys();
 	document.documentElement.classList.remove("search-open");
 	searchOpener = null;
 	window.scrollTo(0, 0);
@@ -821,11 +979,17 @@ window.addEventListener("click", () => setReadMenu(false));
 window.addEventListener("keydown", (event) => {
 	if (event.key === "Escape") {
 		closeSearch();
+		closeKeys();
 		setRail(false);
 		setReadMenu(false);
 		return;
 	}
 	if (event.key === "Tab" && trapRailTab(event)) return;
+	if (event.key === "?" && !event.target.closest("input, textarea")) {
+		event.preventDefault();
+		openKeys();
+		return;
+	}
 	if ((event.key === "/" || (event.key === "k" && (event.metaKey || event.ctrlKey))) && !event.target.closest("input, textarea")) {
 		event.preventDefault();
 		openSearch();
@@ -835,8 +999,19 @@ window.addEventListener("keydown", (event) => {
 	const route = parseRoute();
 	if (route.view !== "read") return;
 	const loc = getChapter(route.bookId, route.chapterId);
-	if (event.key === "[" && loc.prev) go(`#/${loc.book.id}/${loc.prev.id}`);
-	if (event.key === "]" && loc.next) go(`#/${loc.book.id}/${loc.next.id}`);
+	if (!loc) return;
+	if (event.key === "[") {
+		event.preventDefault();
+		if (loc.prev) go(`#/${loc.book.id}/${loc.prev.id}`);
+		else go(`#/${loc.book.id}`);
+		return;
+	}
+	if (event.key === "]") {
+		event.preventDefault();
+		if (loc.next) go(`#/${loc.book.id}/${loc.next.id}`);
+		else if (loc.book.num < 6) go(`#/${books[loc.book.num].id}`);
+		else go("#/");
+	}
 });
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyPrefs);
 
