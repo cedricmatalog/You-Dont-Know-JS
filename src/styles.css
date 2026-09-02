@@ -434,7 +434,7 @@ kbd {
 
 [data-theme="night"] .shelf li,
 [data-theme="night"] .book-hero,
-[data-theme="night"] .chapter-index a {
+[data-theme="night"] .chapter-row {
 	background: color-mix(in srgb, var(--paper) 70%, #000);
 }
 
@@ -528,7 +528,7 @@ kbd {
 	grid-template-columns: 8.5rem 1fr;
 	gap: 1.6rem;
 	align-items: center;
-	margin: 2rem 0 1.4rem;
+	margin: 2rem 0 0;
 	padding: 1.3rem;
 	border: 1px solid var(--line);
 	background: color-mix(in srgb, var(--paper) 70%, #fff);
@@ -546,14 +546,12 @@ kbd {
 	list-style: none;
 	margin: 0;
 	padding: 0;
-	border-top: 1px solid var(--line);
 }
 
 .chapter-row {
-	display: grid;
-	grid-template-columns: 1fr auto;
-	gap: 0.4rem;
+	display: flex;
 	align-items: center;
+	gap: 0.5rem;
 	border-bottom: 1px solid var(--line);
 }
 
@@ -562,10 +560,11 @@ kbd {
 	grid-template-columns: auto 1fr auto;
 	gap: 0.9rem;
 	align-items: center;
-	padding: 0.95rem 0.2rem;
+	flex: 1;
+	min-width: 0;
+	padding: 0.95rem 0.95rem;
 	color: inherit;
 	text-decoration: none;
-	min-width: 0;
 }
 
 .unread-btn {
@@ -1326,7 +1325,7 @@ kbd {
 	}
 
 	.chapter-index a {
-		padding: 1rem 0.15rem;
+		padding: 1rem 1rem;
 		min-height: 52px;
 	}
 
