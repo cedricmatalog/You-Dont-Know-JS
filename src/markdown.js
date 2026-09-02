@@ -69,11 +69,11 @@ function liftFootnotes(markdown) {
 	return `${next}\n\n<section class="footnotes"><h2>Notes</h2><ol>${items}</ol></section>\n`;
 }
 
-function liftIndentedImages(markdown) {
+function liftIndentedFigures(markdown) {
 	const chunks = markdown.split(/(```[\s\S]*?```)/);
 	return chunks
 		.map((chunk, index) =>
-			index % 2 === 1 ? chunk : chunk.replace(/^[ \t]{4,}(<img\b[^>]*>)[ \t]*$/gm, "\n$1\n"),
+			index % 2 === 1 ? chunk : chunk.replace(/^[ \t]{4,}(?=<(?:img|figcaption|br)\b)/gim, ""),
 		)
 		.join("");
 }
@@ -173,19 +173,23 @@ function highlight(code, lang) {
 	}
 }
 
+function headingText(inner) {
+	const doc = new DOMParser().parseFromString(`<div>${inner}</div>`, "text/html");
+	return (doc.body.textContent ?? "").trim();
+}
+
 export function extractHeadings(html) {
 	const headings = [];
 	const re = /<h([2-4])\s+id="([^"]+)"[^>]*>([\s\S]*?)<\/h\1>/gi;
 	let match;
 	while ((match = re.exec(html))) {
-		const text = match[3].replace(/<[^>]+>/g, "").trim();
-		headings.push({ depth: Number(match[1]), id: match[2], text });
+		headings.push({ depth: Number(match[1]), id: match[2], text: headingText(match[3]) });
 	}
 	return headings;
 }
 
 export function renderMarkdown(markdown, { bookId, chapterId }) {
-	const prepared = liftIndentedImages(liftFootnotes(liftCallouts(stripSeriesTitle(markdown))));
+	const prepared = liftIndentedFigures(liftFootnotes(liftCallouts(stripSeriesTitle(markdown))));
 
 	const parser = new Marked();
 	parser.use({

@@ -241,6 +241,10 @@
 	text-align: center;
 }
 
+.prose figure br {
+	display: none;
+}
+
 .prose img {
 	display: block;
 	max-width: 100%;

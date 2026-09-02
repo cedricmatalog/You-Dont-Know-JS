@@ -39,16 +39,6 @@
 	overflow-wrap: break-word;
 }
 
-.book-hero h1 {
-	margin: 0;
-	font-family: var(--font-display);
-	font-size: clamp(2.4rem, 6vw, 4.2rem);
-	line-height: 0.9;
-	letter-spacing: -0.04em;
-	font-weight: 800;
-	text-wrap: balance;
-}
-
 .lede {
 	max-width: 38rem;
 	color: var(--muted);

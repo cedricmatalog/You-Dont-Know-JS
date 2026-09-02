@@ -89,6 +89,7 @@
 
 	.book-hero {
 		grid-template-columns: 1fr;
+		gap: 1.1rem;
 	}
 
 	.chapter-index a {
@@ -135,7 +136,8 @@
 		overflow-wrap: break-word;
 	}
 
-	.masthead .btn {
+	.masthead .btn,
+	.book-hero .btn {
 		width: 100%;
 	}
 
