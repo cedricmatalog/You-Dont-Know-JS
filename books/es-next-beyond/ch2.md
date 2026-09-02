@@ -309,7 +309,7 @@ Read it once more with Kyle missing `enrollment`, Suzy with an empty `courses`, 
 
 Chapter 3 is the built-in *objects and methods* that grew up alongside this syntax: maps, sets, iterators, grouping, and the "why is this not an array" collections.
 
-[^OptionalChain]: "13.3.9 Optional Chains", ECMAScript 2025 Language Specification; https://262.ecma-international.org/16.0/#sec-optional-chaining ; Accessed September 2026
+[^OptionalChain]: "13.3.9 Optional Chains", ECMAScript 2025 Language Specification; https://262.ecma-international.org/16.0/#sec-optional-chains ; Accessed September 2026
 
 [^Nullish]: "13.13 Binary Logical Operators" / `??`, ECMAScript 2025 Language Specification; https://262.ecma-international.org/16.0/#sec-binary-logical-operators ; Accessed September 2026
 
