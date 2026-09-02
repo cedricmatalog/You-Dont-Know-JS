@@ -65,7 +65,13 @@ zoned = plain.toZonedDateTime("UTC");
 instant = zoned.toInstant();
 ```
 
-The conversions are **explicit**. That's the feature. You cannot accidentally treat a birthday as an instant.
+The conversions are **explicit**. You cannot accidentally treat a birthday as an instant.
+
+    <img src="images/fig1.svg" width="720" alt="Temporal type lattice: PlainDate and PlainTime to PlainDateTime to ZonedDateTime to Instant; dashed arrows drop a time zone and are lossy">
+
+| WARNING: |
+| :--- |
+| `PlainMonthDay` has no `.month` you can treat like a `Date` month. Compare with `.equals`, or convert through `toPlainDate` in a year you chose. `PlainDate.until` will not take `largestUnit: "hours"` -- that's a `RangeError`, not "72." Intl formats an `Instant`, not a `ZonedDateTime`. The lattice is the chapter. |
 
 Temporal values are also **immutable**. `zdt.add({ days: 1 })` returns a *new* `ZonedDateTime`. `Date#setHours` mutates in place and returns a number of milliseconds -- a completion value that looks like success and is easy to ignore. If you hold a Temporal object in a `Map` or in React state, you can treat it like a `string` or `number`: replacing it is how you change it. That alone eliminates a class of "I passed the meeting to three components and one of them called `setHours`."
 
@@ -96,7 +102,11 @@ zdt.add({ hours: 24 }).toString();
 // 24 elapsed hours: 9:00 on the wall after the spring-forward skip
 ```
 
-Read those two results until the difference is obvious. `{ days: 1 }` is *calendar*. `{ hours: 24 }` is *timeline*. `Date` only had the second one, and it *displayed* the first. That's the bug people blamed on themselves for twenty years.
+Read those two results until the difference is obvious. `{ days: 1 }` is *calendar*. `{ hours: 24 }` is *timeline*. `Date` only had the second one, and it *displayed* the first.
+
+| NOTE: |
+| :--- |
+| `{ days: 1 }` keeps the wall clock. `{ hours: 24 }` keeps elapsed time. Mixing them is how `Date` taught a generation that "plus one day" was their fault. |
 
 If you email "happy birthday" at `PlainDate` midnight converted through the user's *current* zone as an `Instant`, you will still get it wrong for people who moved. Store `PlainDate`. Instant-ize at send time, on purpose, with a zone you chose.
 
@@ -210,10 +220,13 @@ fmt.format(workshop.toInstant());
 // "Thursday, July 7 at 11:00 AM"
 
 // fmt.format(workshop) throws TypeError
-// Intl will not format a ZonedDateTime: the ZDT already has a
-// zone, and the formatter may have another. Convert to Instant
-// (or PlainDate / PlainDateTime) at the edge.
 ```
+
+Intl will not format a `ZonedDateTime`[^IntlInstant]: the ZDT already has a zone, and the formatter may have another. Convert to `Instant` (or `PlainDate` / `PlainDateTime`) at the edge.
+
+| NOTE: |
+| :--- |
+| ECMA-402's `format` accepts an `Instant`. Engines that have not wired Temporal into `Intl` still call `valueOf`, which Instant forbids -- a `TypeError` that looks like "Intl refuses Temporal" when it is "Intl still wants a `Date`." Pass `new Date(instant.epochMilliseconds)` at that edge, and delete it when `format(instant)` returns a string. |
 
 Two clocks in that snippet: Temporal's `workshop` already *is* Chicago. Intl's `timeZone` option is a *second* projection of the instant. Pass `timeZone` to match the *viewer*. Don't pass a `ZonedDateTime` and hope the engine picks the ZDT's zone -- it is specified not to.
 
@@ -308,7 +321,7 @@ Temporal.ZonedDateTime.from({
 // RangeError
 ```
 
-`Date` would invent *something* -- usually a shifted wall time -- and smile. Temporal's default `compatible` is that same family of guess (here, 2:30 becomes 3:30). Pass `disambiguation: "reject" | "earlier" | "later" | "compatible"` on purpose. Reject is the one I want at a form boundary: "that meeting time doesn't exist, pick another." Compatible is the one APIs use to match `Date`'s old guesses when they must.
+`Date` would invent *something* -- usually a shifted wall time -- and smile. Temporal's default `compatible` is that same family of guess (here, 2:30 becomes 3:30). Pass `disambiguation: "reject" | "earlier" | "later" | "compatible"` on purpose.[^TemporalDisambiguation] Reject is the one I want at a form boundary: "that meeting time doesn't exist, pick another." Compatible is the one APIs use to match `Date`'s old guesses when they must.
 
 Fall-back is the opposite bug: 1:30am happens twice. `from` without disambiguation is underspecified. Make it specified.
 
@@ -489,13 +502,10 @@ var start = Temporal.PlainDate.from("2022-07-07");
 var end = Temporal.PlainDate.from("2022-07-10");
 
 start.until(end).toString();          // "P3D"
-start.until(end, { largestUnit: "hours" });
-// RangeError -- hours are not a PlainDate unit
-// (largestUnit must be day..year). Elapsed hours need
-// ZonedDateTime or Instant.
+start.until(end, { largestUnit: "hours" }); // RangeError
 ```
 
-`PlainDate.until` is *calendar* distance. Three days. Not 72 hours -- those three days might contain a DST 23-hour day if you had zoned times.
+`PlainDate.until`[^PlainDateUntil] is *calendar* distance (`largestUnit` must be day..year). Three days. Not 72 hours -- those three days might contain a DST 23-hour day if you had zoned times. Elapsed hours need `ZonedDateTime` or `Instant`.
 
 ```js
 var a = Temporal.ZonedDateTime.from(
@@ -652,3 +662,9 @@ If you only remember one Temporal sentence from this book: **pick the type that 
 The *Get Started* version of `scheduleMeeting` was the right exercise for Book 1. This is the right exercise for a language that finally grew dates. If your engine doesn't have `Temporal` yet, that's an implementation lag, not a reason to keep mutating `Date`. Polyfill, or skip the run and still *write* the types.
 
 Chapter 5 looks past what's already in the spec: the proposals that might change how you write JS next year -- and the ones that might vanish like Records did.
+
+[^TemporalDisambiguation]: "Temporal.ZonedDateTime.from ( item [ , options ] )", `disambiguation` option, Temporal proposal (Stage 4, March 2026); https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.from ; Accessed September 2026
+
+[^PlainDateUntil]: "Temporal.PlainDate.prototype.until ( other [ , options ] )", largestUnit constrained to date units; https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.until ; Accessed September 2026
+
+[^IntlInstant]: "DateTimeFormat.prototype.format ( dateTime )", ECMA-402; `Temporal.ZonedDateTime` is not a valid input — pass an `Instant` (or a `Date`); https://tc39.es/ecma402/#sec-datetimeformat.prototype.format ; Accessed September 2026

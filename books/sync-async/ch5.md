@@ -68,7 +68,13 @@ async function loadName(id) {
 }
 ```
 
-`await expr`:
+`await expr`[^Await]:
+
+1. Evaluates `expr`.
+2. If it's not a thenable, wraps it as if `Promise.resolve(expr)` -- and still defers at least to a microtask when you `await` a non-thenable in current JS (don't use `await 42` as a scheduling trick you'd depend on across engines/eras; use `queueMicrotask`).
+3. Pauses the async function. The rest of the program continues. The current call stack pops. This is a real async boundary.
+4. When the thenable fulfills, the function resumes with the fulfillment as the value of the `await` expression.
+5. When it rejects, the function resumes by **throwing** that reason at the `await` line -- which you can `try..catch`.
 
 1. Evaluates `expr`.
 2. If it's not a thenable, wraps it as if `Promise.resolve(expr)` -- and still defers at least to a microtask when you `await` a non-thenable in current JS (don't use `await 42` as a scheduling trick you'd depend on across engines/eras; use `queueMicrotask`).
@@ -93,7 +99,49 @@ async function loadName(id) {
 }
 ```
 
-`try..catch` around `await` catches rejections. It also catches sync throws in the function. One channel. That's the headline feature.
+`try..catch` around `await` catches rejections. It also catches sync throws in the function. One channel.
+
+| NOTE: |
+| :--- |
+| `await` on a rejected thenable throws *in the async function*, not in the caller. The caller still has a promise. If the caller does not `await` / `.catch` that promise, you have an unhandled rejection -- the same host report as Chapter 3, now wearing `async`. |
+
+### Errors Across `await` Boundaries
+
+The throw is local to the async function. That is the feature and the trap.
+
+```js
+async function loadClassroom(ids) {
+    var student = await fetchStudent(ids[0]);
+    var guest = await fetchStudent(ids[1]);   // if this rejects...
+    return [ student, guest ];
+}
+
+loadClassroom([ 73, 99 ]);   // returns a rejecting promise
+// `student` is already Suzy. The function throws at the second await.
+// nothing rolls back Suzy. later already happened.
+```
+
+There is no distributed `try` that undoes the first fetch. If both must succeed or neither should be *used*, you still started both worlds. Join with `Promise.all` if you meant "both or neither as a *result*" -- and still abort in-flight work if you meant "both or neither as *operations*."
+
+A bare `await` inside `map` / `forEach` is a new async function per item if you wrote `ids.map(async id => ...)`. Each of those functions has its own `try`. A throw in one does **not** stop the others. It rejects that one promise, which `map` stuffed into an array you might never `Promise.all`. Unhandled, again.
+
+| TIP: |
+| :--- |
+| `ids.map(async id => await fetchStudent(id))` is an array of promises, not a join. `map` will not `Promise.all` for you. A throw in one item rejects that one promise and leaves the rest running. |
+
+```js
+async function labeled(id) {
+    try {
+        return await fetchStudent(id);
+    }
+    catch (err) {
+        err.cause = { id };
+        throw err;
+    }
+}
+```
+
+Attach context (`id`, `url`, `attempt`) at the boundary you still know it. After `await`, the stack the host shows you is the async function plus `cause` if you set it -- not the caller's sync frames from two turns ago. `Error.cause` is how you keep Chapter 2's "name the later card" once the stack has popped.
 
 ### `await` In `catch` And `finally`
 
@@ -121,7 +169,7 @@ async function printSummary(studentID) {
 
 A rejection from `logError` *replaces* the original `err` if you don't handle it -- same `finally` override rule as *Types & Grammar*, now with jobs in between. If you need both errors, wrap the inner `await` or use `error.cause`.
 
-Don't put `return` in `finally` after an `await` unless you mean to swallow the `try` result. I will keep saying this until it sticks.
+Don't put `return` in `finally` after an `await` unless you mean to swallow the `try` result.
 
 ## Sequential By Default, Concurrent By Choice
 
@@ -136,6 +184,10 @@ async function total() {
 ```
 
 If `fetchB` does not need `a`, you serialized two independent network calls. The fix is to **start both, then await both**:
+
+| WARNING: |
+| :--- |
+| `await` in a `for` is a waterfall *even if* the fetches are independent. `forEach(async ...)` is the opposite lie: it looks sequential and is concurrent, and it drops the promises. `Promise.all` is the join you meant. |
 
 ```js
 async function total() {
@@ -368,6 +420,8 @@ async function loadAllTogether(ids) {
 
 `loadAllSerial` waits for Kyle before it even *starts* Suzy. `loadAllTogether` starts everyone, then joins. If each fetch is 50ms and you have 20 IDs, that's ~1000ms vs ~50ms. The `async` keyword did not make the serial version "nice." It made a waterfall easy to type.
 
-Use serial when the next call *needs* the previous value (pagination: `url = data.next`). Use `Promise.all` when it doesn't. That's the whole decision. People fail it because `await` in a `for` looks so like sync that they stop asking the question.
+Use serial when the next call *needs* the previous value (pagination: `url = data.next`). Use `Promise.all` when it doesn't. People fail it because `await` in a `for` looks so like sync that they stop asking the question.
 
 Chapter 6 steps outside one event loop: workers, shared memory, scheduling against the frame budget, and the host APIs that make "later" concrete. You don't need workers for `printSummary`. You need them when the *current card* is too big to hold until paint.
+
+[^Await]: "6.2.4.2 Await ( value )", ECMAScript 2025 Language Specification; https://262.ecma-international.org/16.0/#await ; Accessed September 2026

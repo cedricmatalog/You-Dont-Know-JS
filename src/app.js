@@ -65,8 +65,11 @@ function cycleTheme() {
 	const next = order[(order.indexOf(current) + 1) % order.length];
 	store.setTheme(next);
 	applyPrefs();
-	const btn = document.querySelector("[data-theme]");
-	if (btn) btn.textContent = themeLabel(next);
+	const btn = app.querySelector("[data-theme-toggle]");
+	if (btn) {
+		btn.textContent = themeLabel(next);
+		btn.setAttribute("aria-label", `Theme: ${themeLabel(next)}`);
+	}
 }
 
 function themeLabel(theme) {
@@ -106,7 +109,7 @@ function topbar({ title, back, bookId }) {
 			<div class="topbar-right">
 				<button class="text-btn" type="button" data-font="-1" aria-label="Decrease type size">A−</button>
 				<button class="text-btn" type="button" data-font="1" aria-label="Increase type size">A+</button>
-				<button class="text-btn" type="button" data-theme aria-label="Theme: ${themeLabel(prefs.theme)}">${themeLabel(prefs.theme)}</button>
+				<button class="text-btn" type="button" data-theme-toggle aria-label="Theme: ${themeLabel(prefs.theme)}">${themeLabel(prefs.theme)}</button>
 				<button class="icon-btn" type="button" data-search-open aria-label="Search">${iconSearch()}</button>
 			</div>
 		</header>
@@ -439,7 +442,7 @@ function setRail(open) {
 }
 
 function bindChrome() {
-	app.querySelector("[data-theme]")?.addEventListener("click", cycleTheme);
+	app.querySelector("[data-theme-toggle]")?.addEventListener("click", cycleTheme);
 	app.querySelectorAll("[data-font]").forEach((btn) => {
 		btn.addEventListener("click", () => cycleFont(Number(btn.dataset.font)));
 	});

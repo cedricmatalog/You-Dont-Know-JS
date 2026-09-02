@@ -1,6 +1,8 @@
 # You Don't Know JS Yet: Types & Grammar - 2nd Edition
 # Foreword
 
+Books 1–3 opened with guest essays. This title had no first-edition guest to reprint, so the note is mine.
+
 Types are the values. Grammar is how we write the operations that move those values around. Most JS developers are asked to pick a side: either obsess over types (usually by installing a type *checker* and then ignoring the language's own conversions) or obsess over syntax style (semicolons, `const` vs `let`, which bundler template to clone) and treat the type system as a pile of warts to lint away.
 
 This book refuses that split.

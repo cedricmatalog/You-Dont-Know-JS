@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 360" width="720" height="360" role="img" aria-labelledby="title">
+	<title id="title">Promise states and the new promise .then returns</title>
+	<style>
+		.box { fill: #eef2f6; stroke: #1a2330; stroke-width: 2.4; }
+		.t { font: 600 14px ui-monospace, "IBM Plex Mono", monospace; fill: #1a2330; }
+		.s { font: 500 12px ui-monospace, "IBM Plex Mono", monospace; fill: #536274; }
+		.a { stroke: #1a2330; stroke-width: 2.2; fill: none; marker-end: url(#arr-p); }
+	</style>
+	<defs>
+		<marker id="arr-p" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+			<path d="M0,0 L8,4 L0,8 Z" fill="#1a2330"/>
+		</marker>
+	</defs>
+	<rect width="720" height="360" fill="#eef2f6"/>
+
+	<rect class="box" x="260" y="20" width="200" height="52" rx="2"/>
+	<text class="t" x="312" y="52">pending</text>
+	<line class="a" x1="300" y1="72" x2="160" y2="118"/>
+	<line class="a" x1="420" y1="72" x2="560" y2="118"/>
+	<text class="s" x="168" y="104">fulfill (once)</text>
+	<text class="s" x="488" y="104">reject (once)</text>
+
+	<rect class="box" x="40" y="124" width="220" height="52" rx="2"/>
+	<text class="t" x="62" y="156">fulfilled (value)</text>
+	<rect class="box" x="460" y="124" width="220" height="52" rx="2"/>
+	<text class="t" x="482" y="156">rejected (reason)</text>
+
+	<line class="a" x1="150" y1="176" x2="280" y2="228"/>
+	<line class="a" x1="570" y1="176" x2="440" y2="228"/>
+
+	<rect class="box" x="120" y="228" width="480" height="108" rx="2"/>
+	<text class="t" x="140" y="258">p2 = p1.then(onFulfilled, onRejected)</text>
+	<text class="s" x="140" y="282">return a value  -&gt;  p2 fulfills with it</text>
+	<text class="s" x="140" y="300">throw  -&gt;  p2 rejects with that throw</text>
+	<text class="s" x="140" y="318">return a thenable  -&gt;  p2 adopts it</text>
+</svg>

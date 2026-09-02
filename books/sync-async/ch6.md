@@ -88,9 +88,15 @@ The `50` is not magic. Change it to `1` and you yield too often -- 10,000 frames
 
 ## Workers: Another Heap, Another Loop
 
-A **Web Worker** (or Node `worker_threads` worker) is another JS world: own global, own event loop, own heap. It does not see your `window`, your DOM, your `currentUser` variable.
+A **Web Worker** (or Node `worker_threads` worker) is another JS world: own global, own event loop, own heap.[^AgentClusters] It does not see your `window`, your DOM, your `currentUser` variable.
 
-Communication is **by message** (structured clone), or by transferring certain objects (ArrayBuffers, MessagePorts) so only one side owns them, or by **SharedArrayBuffer** (later).
+    <img src="images/fig3.svg" width="650" alt="Main thread and worker as two heaps and two event loops, connected only by postMessage">
+
+| TIP: |
+| :--- |
+| A worker cannot see `currentUser`. `postMessage` of a function throws -- structured clone does not copy closures. The clone *is* the API: send data, not your scope. |
+
+Communication is **by message** (structured clone[^StructuredClone]), or by transferring certain objects (ArrayBuffers, MessagePorts) so only one side owns them, or by **SharedArrayBuffer** (later).
 
 ```js
 // main
@@ -158,7 +164,7 @@ self.addEventListener("message", function onMsg(evt){
 });
 ```
 
-Draw that on paper before you write it. The worker should not know about the DOM. The main thread should not know how `factor` works. The *id* is the only shared fiction. Errors have to be cloneable -- a real `Error` object may or may not survive structured clone depending on the engine and fields; sending `{ message }` is boring and reliable.
+Draw that on paper before you write it -- or look at the figure. The worker should not know about the DOM. The main thread should not know how `factor` works. The *id* is the only shared fiction. Errors have to be cloneable -- a real `Error` object may or may not survive structured clone depending on the engine and fields; sending `{ message }` is boring and reliable.
 
 If you skip the `Map` of pending jobs, the second call's result can fulfill the first call's promise. That's the kind of bug that only shows up under load. Chapter 1 said later is a different world. Two laters at once are two worlds, and they need name tags.
 
@@ -193,6 +199,10 @@ Same structured clone, same transfer list. The win is isolation: this conversati
 ## Structured Clone And Transfer
 
 `postMessage(value)` structured-clones `value`. Functions, DOM nodes, and some host objects don't clone. Dates, maps, sets, ArrayBuffers, errors (with caveats), and plain data do.
+
+| NOTE: |
+| :--- |
+| Clone is a *copy*. Mutating the received object does not mutate the sender's. Transfer is a *move*: after `postMessage(buffer, [buffer])`, the sender's buffer is detached. SharedArrayBuffer is the third story, and it is a data race without `Atomics`. |
 
 Transferables move instead of copy:
 
@@ -306,7 +316,7 @@ self.addEventListener("message", function onMsg(evt){
 
 Walk the racy line. Worker 1 reads `0`, worker 2 reads `0`, both write `1`. Two increments became one. That's a lost update. JS did not throw. The event loop did not save you. You asked for shared memory, you got a C bug.
 
-`Atomics.add(view,0,1)` is one RMW (read-modify-write) the CPU treats as a unit. After 200,000 of them, `load` is 200000. That's the whole lesson. Not mutexes, not lock-free queues -- just: **the `+=` you grew up with is not a unit across threads.**
+`Atomics.add(view,0,1)` is one RMW (read-modify-write) the CPU treats as a unit. After 200,000 of them, `load` is 200000. Not mutexes, not lock-free queues -- just: **the `+=` you grew up with is not a unit across threads.**
 
 A flag protocol for "payload ready" is the next step, and it's where people get almost-right:
 
@@ -411,6 +421,10 @@ controller.abort();
 Pass `signal` down. Check it between chunks of CPU work (`signal.throwIfAborted()`). Tie timeouts with `AbortSignal.timeout(ms)` and composition with `AbortSignal.any([ userCancel, timeout ])`.
 
 Promises don't cancel. Operations do. The signal is how you tell the operation.
+
+| WARNING: |
+| :--- |
+| `controller.abort()` rejects the promise you wired to the signal. It does not stop a `factor` loop that never reads a flag. Cooperative cancellation is a protocol, not a preemption switch. If you needed kill, that's `worker.terminate()`, and it kills *every* job on that worker. |
 
 Workers don't listen to `AbortSignal` by themselves. You *teach* them:
 
@@ -609,7 +623,7 @@ If you `Promise.all([ askWorker("parse", ..), askWorker("score", 73) ])` you've 
 
 `if (!job)` in `onMsg` is not decorative. You aborted. You `terminate()`d and spun a new worker whose leftover `message` events you forgot to ignore. You reused ids after `nextID` overflowed (use a bigint or uuid if you are that long-lived). Unknown ids are a *real* state. Logging them is how you find the protocol bug instead of a hang.
 
-Take this roster program and break it on purpose: drop the id, swap parse and score, parse on main. Watch which bug shows up as jank, which as swapped names, which as a pending promise that never settles. That's the practice this chapter needs, more than another API list.
+Take this roster program and break it on purpose: drop the id, swap parse and score, parse on main. Watch which bug shows up as jank, which as swapped names, which as a pending promise that never settles.
 
 ### When Not To Worker
 
@@ -703,6 +717,10 @@ You now have the clock: now vs later, callbacks vs promises vs `await`, one loop
 
 Time is still an input. Author like you know that.
 
-Don't start a worker for `fetchStudent`. Do start one when `factorizeClassroomIds` pegs the CPU for 200ms. Measure first (*the first edition of this book spent whole chapters on that -- the grain is: if you can't feel the jank, you probably don't need a worker yet*). Then draw the message protocol on paper before you write `postMessage`. Correlation IDs for overlapping requests are not optional once two `printSummary`s can be in flight.
+Don't start a worker for `fetchStudent`. Do start one when `factorizeClassroomIds` pegs the CPU for 200ms. If you can't feel the jank, you probably don't need a worker yet. Correlation IDs for overlapping requests are not optional once two `printSummary`s can be in flight.
 
 Appendix B has exercises. Do them in an editor. Predicting `"A" "D" "C" "B"` on paper is not the same as shipping a waterfall by accident.
+
+[^AgentClusters]: "9.7 Agent Clusters and Atomics.wait", ECMAScript 2025 Language Specification; https://262.ecma-international.org/16.0/#sec-agent-clusters-and-atomicswait ; Accessed September 2026
+
+[^StructuredClone]: "2.9.4 Safe passing of structured data", HTML Living Standard; https://html.spec.whatwg.org/multipage/structured-data.html#safe-passing-of-structured-data ; Accessed September 2026

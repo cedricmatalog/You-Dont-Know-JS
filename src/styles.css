@@ -1159,7 +1159,7 @@ a:hover {
 		height: 40px;
 	}
 
-	.topbar-right [data-theme] {
+	.topbar-right [data-theme-toggle] {
 		letter-spacing: 0.02em;
 		padding: 0 0.2rem;
 		min-width: 0;

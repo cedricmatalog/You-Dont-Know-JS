@@ -294,8 +294,8 @@ That's six loop/promise drills plus abort. Same try-then-solutions shape as *Get
 
 Predict, run, then read the solution. If you predicted `C` before `B` in Chapter 1's first drill, you still collapsed jobs and tasks. Stay there. The rest of the book is that distinction wearing nicer clothes.
 
-Do the flood last. If `"task"` never prints, you felt jobs starving tasks. That's the appendix's visceral win. Then go write `Promise.all` in a real loader.
+Do the flood last. If `"task"` never prints, you felt jobs starving tasks. Then go write `Promise.all` in a real loader.
 
-That's it for this book. Now go find a real `fetch` in your codebase and ask: is this a waterfall that wanted `Promise.all`? Is this a click handler with no abort on unmount? That's the practice that sticks.
+Now go find a real `fetch` in your codebase and ask: is this a waterfall that wanted `Promise.all`? Is this a click handler with no abort on unmount?
 
 If `"after calls"` printed *after* `p1 Suzy` on a warm cache, you still have Zalgo. Stay on that exercise until the log is boringly `after` then `p1` then `p2`. The rest of the appendix is that one invariant wearing nicer clothes.

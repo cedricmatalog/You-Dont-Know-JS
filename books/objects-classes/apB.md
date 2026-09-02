@@ -177,7 +177,7 @@ Guest.prototype = Object.create(Student.prototype);
 Guest.prototype.constructor = Guest;
 ```
 
-Now `visit` lives on a *new* object whose `[[Prototype]]` is `Student.prototype`. `suzy.visit` is `undefined`. That's the `extends` desugar. Draw it. If you cannot draw it, you cannot debug it in a 2014 codebase.
+Now `visit` lives on a *new* object whose `[[Prototype]]` is `Student.prototype`. `suzy.visit` is `undefined`. That's the `extends` desugar. The figure in "Statics Are A Parallel Chain" is this graph; if you cannot point at the two arrows, you cannot debug it in a 2014 codebase.
 
 `class Guest extends Student {}` will not make this mistake. Hand-wiring will, forever, which is why this appendix still exists.
 
@@ -196,12 +196,14 @@ Guest.load(73);                          // works -- statics inherit
 `class` links `Guest` (the function object) `[[Prototype]]` to `Student` (the function), so statics delegate too. Hand-wiring `Guest.prototype = Object.create(Student.prototype)` does **not** by itself make `Guest.load` work. You also need `Object.setPrototypeOf(Guest, Student)` (or `Guest.__proto__ = Student`, which you should not write). Forget that line and statics look "broken" in a 2014 class pattern. `class` wrote both links. That's another reason not to hand-wire new code -- two chains, easy to do one.
 
 ```js
-Object.getPrototypeOf(Guest) === Student;           // class: true
+Object.getPrototypeOf(Guest) === Student;           // true
 Object.getPrototypeOf(Guest.prototype) ===
-    Student.prototype;                              // instance methods
+    Student.prototype;                              // true
 ```
 
-Draw both. Interviews that only ask about `.prototype` are asking about half the desugar.
+    <img src="images/fig1.svg" width="650" alt="Two [[Prototype]] chains: kyle to Guest.prototype to Student.prototype, and Guest the function to Student the function">
+
+Both arrows. Interviews that only ask about `.prototype` are asking about half the desugar. If you cannot draw this, you cannot debug a 2014 `Guest.prototype = Student.prototype` leak — that bug is the two objects becoming one.
 
 ## `new.target` And The Forgotten `new`
 
@@ -267,6 +269,4 @@ you should be able to sketch: `Guest.prototype` linked to `Student.prototype`; `
 
 Protected stays a userland WeakMap or a public field. `#` stays per-class-body. `class` stays the syntax I expect you to use for taxonomies. The 2014 pattern stays a reading skill. That's the whole leftover, named.
 
-If you can desugar `class Guest extends Student` on a whiteboard into two `[[Prototype]]` links, `super()`, and a `this` call site, you don't need to write the old pattern again. You needed to *see* it. That's consistency with Book 2: we showed scope diagrams so `var` wasn't folklore. Here the diagram is objects.
-
-Sketch it once on paper with `Guest` / `Student` / instance. Two arrows up from the instance (to `Guest.prototype`, then `Student.prototype`), one arrow from `Guest` the function to `Student` the function. If you drew one arrow, you missed statics. If you drew copies inside the instance, you missed the book.
+If you can desugar `class Guest extends Student` into the two `[[Prototype]]` links in the figure — plus `super()` and a `this` call site — you don't need to write the old pattern again. If you drew one arrow, you missed statics. If you drew copies inside the instance, you missed the book.

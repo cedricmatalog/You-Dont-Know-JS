@@ -17,6 +17,10 @@ Optional chaining: if the value before `?.` is `null` or `undefined`, the expres
 
 You cannot assign through it (`a?.b = 1` is a syntax error). You should not use it to hide bugs (`data?.foo?.bar?.baz` six levels deep usually means you don't know your data). Use it at *real* boundaries: "this key might be absent," "this API might not exist."
 
+| WARNING: |
+| :--- |
+| `new record.Ctor?.()` is a **SyntaxError**. Optional chaining is not allowed in a `new` expression. Guard with `record.Ctor && new record.Ctor()` or `new (record.Ctor ?? Default)()`. |
+
 Let's put a student record through it, slowly:
 
 ```js
@@ -35,7 +39,7 @@ var kyle = {
 };
 
 function firstCourse(student) {
-    return student.enrollment?.courses?.[0] ?? "none";
+    return student?.enrollment?.courses?.[0] ?? "none";
 }
 
 firstCourse(suzy);           // "YDKJS"
@@ -65,6 +69,10 @@ volume = settings.volume ?? 0.8;
 ```
 
 `??` substitutes only for `null` and `undefined`. `||` also substitutes for `0`, `""`, `false`, `NaN`. Volume `0` is a value. Empty string as a stored name may be a value. Default those with `??`, not `||`.
+
+| TIP: |
+| :--- |
+| `port = config.port || 80` treats `0` as missing. `port = config.port ?? 80` does not. If you have ever debugged a "port became 80" in production, this is that bug with a name. |
 
 Mixing `??` with `&&` / `||` requires parentheses. That's a syntax error on purpose.
 
@@ -270,8 +278,6 @@ The `_` is grammar inside numeric literals. `Number.parseInt("1_000",10)` is `1`
 ### Tagged Templates Are Not Interpolation
 
 Chapter 2's `sql` tag turned values into `$1` parameters. The untagged template glued them into source. The grammar difference is the tag identity: `` sql`...` `` calls a function with a strings array. `` `...` `` is ToString of holes into one string. If you "just add a tag later," you change the meaning of every hole. That's not a refactor; that's a new DSL.
-
-That's the syntax I want in your fingers: `?.` at real boundaries, `??` for missing, spread as shallow, tags as structure, `import()` as a promise. The sharp edges are the book. The catalog is MDN.
 
 If you only remember one pair from this chapter: `||` vs `??`, and "spread is a new shell." Those two bugs are still in production in 2026. The rest is MDN when you need a flag.
 

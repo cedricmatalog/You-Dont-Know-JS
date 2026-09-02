@@ -244,7 +244,29 @@ If you only have a callback-based event source, wrapping it in an async generato
 
 ## Iterators Are Pull, Events Are Push
 
-Iterators: consumer says `.next()` / `await next`. Events: producer fires whenever. Neither is "better." A chat socket is push (events / async iterable you don't control the rate of). A file you parse line by line is pull. Backpressure -- slowing the producer when the consumer is behind -- is the hard part of connecting them. Web Streams exist because this problem is real.
+Iterators: consumer says `.next()` / `await next`. Events: producer fires whenever. Neither is "better." A chat socket is push (events / async iterable you don't control the rate of). A file you parse line by line is pull. **Backpressure** -- slowing the producer when the consumer is behind -- is the hard part of connecting them. Web Streams exist because this problem is real.
+
+Pull has backpressure for free: if you don't call `.next()`, nothing is produced. Push has the opposite default: the producer fires, and if you aren't ready you either drop or queue. An async generator that `yield`s faster than the `for await` consumer can process is still pull -- the generator is paused at `yield` until the consumer pulls again. That is the contract. Break it by pushing into an Array "to be nice" and you built an unbounded queue with extra syntax.
+
+```js
+async function* paced(source) {
+    for await (let chunk of source) {
+        yield chunk;             // paused until the consumer pulls
+    }
+}
+
+async function slowConsumer(source) {
+    for await (let chunk of paced(source)) {
+        await paint(chunk);      // next pull waits for paint
+    }
+}
+```
+
+`break` / `return` from `for await` calls `.return()` on the iterator. If you wrapped `fetch` pages, `.return()` is where you `controller.abort()`. If you ignore `.return()`, the producer keeps running after the consumer left -- the same "later is a different world" bug as a `fetch` you didn't abort.
+
+| WARNING: |
+| :--- |
+| `for await` of a **sync** iterable still awaits each value if the value is thenable. A list of promises becomes a waterfall. If you meant join, that was `Promise.all`. If you meant pull, yield values, not promises-of-values, unless you want the pause. |
 
 Don't wrap every event emitter in an async generator "because modern." If the consumer isn't pulling, you just built an unbounded queue.
 

@@ -1,9 +1,11 @@
 # You Don't Know JS Yet: Sync & Async - 2nd Edition
 # Chapter 2: Callbacks
 
-A callback is a function you pass to another function so that *it* can call *you* later.
+A callback is a function you pass to another function so that *it* can call *you* later. Historically, that's how JS expressed *all* asynchrony: timers, DOM events, XHR, Node's filesystem, `addEventListener`, `arr.map(fn)`. Some of those callbacks are sync (`.map(..)` calls you *now*, once per element). Some are async (the click hasn't happened). The grammar looks the same. The *when* is not.
 
-That's the whole idea. It is also, historically, how JS expressed *all* asynchrony: timers, DOM events, XHR, Node's filesystem, `addEventListener`, `arr.map(fn)`. Some of those callbacks are sync (`.map(..)` calls you *now*, once per element). Some are async (the click hasn't happened). The grammar looks the same. The *when* is not.
+| NOTE: |
+| :--- |
+| `arr.map(fn)` is not later. It is a loop. If you `map` an `async` function, you get an array of promises *now* and you did not wait. That bug is Chapter 5; the seed is here: the word "callback" hid the clock. |
 
 This chapter is about the async kind, the problems they cause when they're your only tool, and the patterns that make them less of a liability. We are not throwing callbacks away -- promises and `await` still *are* callbacks, dressed up. We are learning why the dress-up was necessary.
 

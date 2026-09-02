@@ -32,6 +32,7 @@
     * Thenables And `.then(..)`
     * Errors Fall Until Caught
     * Combinators
+        * Combinator Error Semantics
     * Thenables That Aren't Promises
     * Sync-Looking Lies
     * Cancellation Is Not A Promise State
@@ -53,6 +54,8 @@
     * `printSummary` At Last Looks Like Sync
     * `async` Functions Return Promises
     * `await` Unwraps Thenables
+        * Errors Across `await` Boundaries
+        * `await` In `catch` And `finally`
     * Sequential By Default, Concurrent By Choice
         * See The `forEach` Bug
     * `await` Is Not Allowed Everywhere

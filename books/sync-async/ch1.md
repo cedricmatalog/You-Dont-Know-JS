@@ -180,8 +180,10 @@ That's it. There is no secret third mode where JS "checks for clicks" in the mid
 
 There is not one queue, though. There are at least two time-scales that matter:
 
-* **Tasks** (macrotasks): timers, I/O callbacks, UI events, `setImmediate` (Node), `postMessage` / message events. Each task is a turn. After a task, browsers may render.
-* **Microtasks** (jobs): promise reactions (`.then` / `.catch` / `.finally` callbacks), `queueMicrotask(..)`, `MutationObserver` callbacks in the browser. After *every* task, the engine drains the **microtask queue to empty** before rendering or starting the next task.
+    <img src="images/fig1.svg" width="650" alt="One event-loop turn: a task, then drain the job queue to empty, then the host may render before the next task">
+
+* **Tasks** (macrotasks)[^HTMLEventLoop]: timers, I/O callbacks, UI events, `setImmediate` (Node), `postMessage` / message events. Each task is a turn. After a task, browsers may render.
+* **Microtasks** (jobs)[^Jobs]: promise reactions (`.then` / `.catch` / `.finally` callbacks), `queueMicrotask(..)`, `MutationObserver` callbacks in the browser. After *every* task, the engine drains the **microtask queue to empty** before rendering or starting the next task.
 
 ```js
 console.log("A");
@@ -246,7 +248,7 @@ later
 
 That chaining is how `async`/`await` (Chapter 5) can look sequential while still being a pile of jobs. It's also how a buggy `.then` that always schedules another `.then` never lets the page paint.
 
-Don't take my word for the order. Paste these snippets. Change them. Log `"now"` and `"later"` until the order bores you. That's the practice this chapter needs.
+Don't take my word for the order. Paste these snippets. Change them. Log `"now"` and `"later"` until the order bores you.
 
 ### Nested Jobs Starve Paint
 
@@ -372,10 +374,14 @@ If you remember only one taxonomy from this chapter:
 * **Later (task):** timers, I/O, events. After microtasks, when the host says so.
 * **Somewhere else:** workers, other windows, servers. Not your event loop; only messages and shared memory cross the gap.
 
-That's not a lot of categories. People get in trouble by collapsing them into one word, "async," and then being surprised that `Promise.then` beats `setTimeout(0)`, or that `await` in a `forEach` doesn't wait.
+People get in trouble by collapsing them into one word, "async," and then being surprised that `Promise.then` beats `setTimeout(0)`, or that `await` in a `forEach` doesn't wait.
 
 The rest of this book is how we *author* the connections between those times without drowning in callbacks, without lying about errors, and without pretending JS is single-threaded *and* frozen until we're done.
 
 Don't rush into Chapter 2 yet. Write a page that logs now/later with a timer, a promise, and a click (if you're in a browser). Predict the order. Then run it. If you predicted wrong, you're in the right book.
 
 Chapter 2 starts with callbacks -- the foundation everything else still sits on, and the failure mode everything else was invented to fix.
+
+[^HTMLEventLoop]: "8.1.7.3 Event loop processing model", HTML Living Standard; https://html.spec.whatwg.org/multipage/webappapis.html#event-loop-processing-model ; Accessed September 2026
+
+[^Jobs]: "8.4 Jobs and Host Operations to Enqueue Jobs", ECMAScript 2025 Language Specification; https://262.ecma-international.org/16.0/#sec-jobs ; Accessed September 2026

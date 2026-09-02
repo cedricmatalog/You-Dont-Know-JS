@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280" width="720" height="280" role="img" aria-labelledby="title">
+	<title id="title">Main thread and worker: two heaps, two loops, messages in between</title>
+	<style>
+		.box { fill: #eef2f6; stroke: #1a2330; stroke-width: 2.4; }
+		.t { font: 600 14px ui-monospace, "IBM Plex Mono", monospace; fill: #1a2330; }
+		.s { font: 500 12px ui-monospace, "IBM Plex Mono", monospace; fill: #536274; }
+		.a { stroke: #1a2330; stroke-width: 2.2; fill: none; marker-end: url(#arr-w); }
+	</style>
+	<defs>
+		<marker id="arr-w" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+			<path d="M0,0 L8,4 L0,8 Z" fill="#1a2330"/>
+		</marker>
+	</defs>
+	<rect width="720" height="280" fill="#eef2f6"/>
+
+	<rect class="box" x="24" y="24" width="280" height="232" rx="2"/>
+	<text class="t" x="44" y="56">main heap</text>
+	<text class="s" x="44" y="80">own event loop</text>
+	<text class="s" x="44" y="102">window, DOM, currentUser</text>
+	<text class="s" x="44" y="140">pending.set(id, { resolve })</text>
+	<text class="s" x="44" y="162">factor() would jank here</text>
+	<text class="s" x="44" y="200">do not parse 50MB here</text>
+	<text class="s" x="44" y="222">closures stay on this side</text>
+
+	<rect class="box" x="416" y="24" width="280" height="232" rx="2"/>
+	<text class="t" x="436" y="56">worker heap</text>
+	<text class="s" x="436" y="80">own event loop</text>
+	<text class="s" x="436" y="102">no window, no DOM</text>
+	<text class="s" x="436" y="140">factor(n) runs to completion</text>
+	<text class="s" x="436" y="162">cannot close over main vars</text>
+	<text class="s" x="436" y="200">errors must be cloneable</text>
+	<text class="s" x="436" y="222">own GC, own stack, own now</text>
+
+	<line class="a" x1="304" y1="88" x2="408" y2="88"/>
+	<line class="a" x1="408" y1="192" x2="304" y2="192"/>
+	<text class="s" x="312" y="80">postMessage</text>
+	<text class="s" x="300" y="108">structured clone</text>
+	<text class="s" x="318" y="184">{ id, result }</text>
+	<text class="s" x="318" y="212">or { id, error }</text>
+</svg>

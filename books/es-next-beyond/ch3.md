@@ -23,6 +23,10 @@ byMap.set(kyleA,"signed in");
 byMap.set(kyleB,"also signed in");
 
 byMap.size;                  // 2
+
+| NOTE: |
+| :--- |
+| `Map` keys use SameValueZero, not `==`. `NaN` matches `NaN`. `-0` and `0` are the same key. Object identity is the key for `kyleA` vs `kyleB`. Stringifying a POJO as a key is how you got `"[object Object]"` and thought `groupBy` was broken. |
 byMap.get(kyleA);            // "signed in"
 ```
 
@@ -125,7 +129,11 @@ result = Iterator.from(infinite)
     .toArray();
 ```
 
-Unlike array methods, these are **lazy**. The infinite iterable doesn't explode until you pull. That's the point. Don't `.toArray()` in the middle unless you need random access.
+Unlike array methods, these are **lazy**. The infinite iterable doesn't explode until you pull. Don't `.toArray()` in the middle unless you need random access.
+
+| WARNING: |
+| :--- |
+| `.toArray()` is the `await` of iterator helpers: it looks like a fluent method and it is a completion. After it, you have a real Array and you paid for every element. `take(10).toArray()` is a program. `.toArray().slice(0, 10)` on an infinite iterator is a hang. |
 
 ```js
 function* ids() {
@@ -212,6 +220,10 @@ Copying array methods (`.toSorted()`, `.with(i, v)`) exist because `.sort()` mut
 
 `structuredClone(classroom)` walks the graph. Functions throw. That's the honest error. `{ ...classroom }` copies one layer. Know which clone you bought.
 
+| NOTE: |
+| :--- |
+| `structuredClone` is a *host* clone (HTML / Node), not an ECMA-262 operation. It still will not copy functions, DOM nodes, or your closed-over `currentUser`. If the throw surprised you, you wanted a message, not a copy of the program. |
+
 ### `Set` Is Not Unique Objects-By-Contents
 
 ```js
@@ -260,7 +272,7 @@ If `ids` is React state or a shared classroom list, mutate is a bug. If `ids` is
 
 Use the built-in that matches the *question*: identity keys (`Map`), uniqueness of primitives (`Set`), GC-aware identity (`Weak*`), lazy pull (iterator helpers), bytes (typed arrays), humans (`Intl`), URLs (`URL`). A POJO is still fine for a record with known string fields. The crime is using one collection as if it were another.
 
-That's the chapter: pick the collection that matches identity vs string keys vs GC vs pull vs bytes vs humans. If you finish still stuffing object keys into POJOs, re-read the two Kyles until you're angry. Then Appendix B.
+If you finish still stuffing object keys into POJOs, re-read the two Kyles until you're angry. Then Appendix B.
 
 `Intl` formats. Temporal stores. `URL` parses. Typed arrays are bytes. Iterator helpers pull. `Map` identity. If you remember only that list as *questions*, you don't need a catalog tattooed on your arm.
 

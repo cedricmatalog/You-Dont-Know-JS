@@ -24,6 +24,10 @@ There's a long, loud history: F# pipes (`value |> fn` meaning `fn(value)`) vs Ha
 
 **Tonight:** write helper functions and intermediate `var`s. They are readable. Do not ship a Babel plugin for stage 2 pipes in a bank app.
 
+| NOTE: |
+| :--- |
+| Stage 2 is a draft of a problem space. The token (`%` or otherwise) can still change. A plugin you cannot date-delete is a fork of JS, not a preview of it. |
+
 Why the fight lasted so long: F# pipes compose *functions*; Hack pipes compose *expressions*. JS already has two call syntaxes (parens and tagged templates), methods (`obj.foo()`), and `await`. A pipe that only works with unary functions makes `await fetch(url)` and `obj.foo(1, 2)` awkward. A pipe that injects a topic token makes `user |> foo(%)` obvious and `user |> foo` (implicit call) a different language. TC39 picking Hack is a bet that JS is an expression language, not a point-free FP language. You don't have to like the bet. You do have to notice it is a *language* bet, not a missing `lodash.flow`.
 
 If you want left-to-right today:
@@ -145,6 +149,42 @@ A lot of "the future of JS" is not ECMA-262. It's:
 
 YDKJSY is about **JS the language**. When a problem is "this loop is too slow," wasm or a worker may be the answer, not a new operator. When a problem is "this date math is wrong," Temporal is the answer, not wasm.
 
+## How To Read A Horizon Feature
+
+Chapter 1's card still works when the feature is not in the language yet. Fill it anyway. The difference is the **delete-by** date is "stage 4 *and* baseline," not "next Tuesday."
+
+Walk `using` as an example, slowly:
+
+* **Problem:** `try..finally { file.close() }` is easy to skip on a new `return` in the middle of the block.
+* **Mechanism:** a block-scoped binding whose `Symbol.dispose` / `Symbol.asyncDispose` runs on exit, including throw.
+* **Pillar:** that's *Types & Grammar*'s completion (`return` in `finally` still wins) plus *Sync & Async*'s "close is later, so `await using`."
+* **Tonight:** `try..finally`. The symbol protocol is something you can implement on a stub object in a REPL *if* your engine has `using`. If it doesn't, the `finally` is the whole feature.
+* **Don't:** transpile a stage-3 `using` into a bank app so the file looks modern.
+
+Pipes get the same card: problem is nested calls; mechanism is a topic token; pillar is still grammar (ASI, `await` in the RHS, comma operator fights); tonight is a named `var`; don't is Babel.
+
+Pattern matching: problem is nested `if` / `switch` on shape; mechanism is a new production that can coerce and bind; pillar is *Types & Grammar* (what does a match do to `==` folklore?); tonight is functions that return discriminants; don't is "we match like Rust now."
+
+| NOTE: |
+| :--- |
+| If you cannot name the pillar, you are not adopting a feature. You are collecting syntax. *Get Started* Chapter 1 already said that about JS itself. Horizon features fail the same test more often, because the explainer is prettier than the spec. |
+
+### Decorators Are A Compiler Tax Until They Aren't
+
+A decorator that only exists after `tsc` / Babel is a dialect. Standard decorators (when your *engine* has them) are JS. Those are different baselines. Frameworks that require `@Component` are charging a framework tax; that is allowed, and it is not "JS has decorators." Put the transform on `BASELINE.md` with a delete-by date, or admit it has none.
+
+Tonight without the tax: a function that receives the class or the method and returns it. You already know `Object.defineProperty`. A lot of decorator demos are that function with an `@` in front.
+
+### `using` And The Close You Were Going To Forget
+
+The interesting part is not the keyword. It is that dispose runs on *every* exit: `return`, `throw`, `break` from an outer labeled block if the `using` is in scope. That's the `finally` you keep forgetting in a classroom loader that opens a file, `await`s `fetchStudent`, and returns early on a missing id.
+
+`await using` is for when close itself is later (`file.close()` that returns a promise). Mixing them -- sync `using` around async close -- hides a job. *Sync & Async* Chapter 5: if it is later, `await` it.
+
+| WARNING: |
+| :--- |
+| `Symbol.dispose` that throws replaces the original error the same way `finally` can. If you needed both, `error.cause` or a suppressed-error list (the proposal has one; check the year you are reading). Don't log in dispose and assume the `try` error is still the one the caller sees. |
+
 ## How To Watch Without Drowning
 
 1. Read the **TC39 agendas and notes** occasionally, not every tweet from the meeting week.
@@ -163,4 +203,4 @@ If you can see a new proposal and ask, "which pillar does this touch? which abst
 
 That's the goal. Not to know JS. To know how to **keep knowing** it.
 
-Appendix A is the field card. Appendix B is practice. Go write some code -- in last year's JS, unless your baseline says otherwise.
+Appendix A is the field card -- including the `BASELINE.md` this repo keeps at the root, so the practice has a file, not just a sermon. Appendix B is practice. Go write some code -- in last year's JS, unless your baseline says otherwise.

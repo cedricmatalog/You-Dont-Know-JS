@@ -137,7 +137,9 @@ p.then(
 );
 ```
 
-`.then(..)` **returns a new promise**, which settles based on what the handler does:
+`.then(..)` **returns a new promise**[^PerformPromiseThen], which settles based on what the handler does:
+
+    <img src="images/fig2.svg" width="650" alt="A promise is pending, then fulfilled or rejected once; then always returns a different promise">
 
 * return a value → the next promise fulfills with that value
 * throw → the next promise rejects with that throw
@@ -239,7 +241,31 @@ function loadAllTogether(ids) {
 
 `loadAllSerial` is a `.then` waterfall -- Kyle's fulfillment starts Suzy's fetch. `loadAllTogether` starts everyone on the current turn. Same functions as Chapter 5's `async` versions. Learn to see `Promise.all` here so `await Promise.all` later isn't a slogan.
 
-* **`Promise.any(iterable)`** -- fulfills with the first *fulfillment*; rejects with an `AggregateError` only if *all* reject. Useful for "several mirrors, take the first that works."
+### Combinator Error Semantics
+
+The join is the easy part. The rejection is the part people ship wrong.
+
+**`Promise.all` is fail-fast.** The first rejection rejects the join immediately. The other operations **keep running** -- there is no language-level cancel. You still get one rejection, not an `AggregateError`. If `fetchStudent(14)` fails while 73 is in flight, you must still abort 73 yourself (`AbortSignal`) or accept the wasted work.
+
+```js
+Promise.all([
+    fetchStudent(73),
+    fetchStudent(99)         // rejects
+]).catch(function(err){
+    // one reason. 73 may still settle later, unheard.
+});
+```
+
+**`Promise.allSettled` never short-rejects.** You get an array of `{ status: "fulfilled", value }` / `{ status: "rejected", reason }` in input order. Use it when "Kyle failed" must not hide whether Suzy loaded. Inspect every row. A `.then` that only looks at `results[0]` wasted the combinator.
+
+**`Promise.any` is fail-*last*.** The first *fulfillment* wins. Only if *every* input rejects do you get `AggregateError`, whose `.errors` array is those reasons in input order. "Several mirrors, take the first that works" -- until none work, and then you needed all the reasons.
+
+**`Promise.race` is settle-first, either way.** A rejection that arrives before a fulfillment *is* the result. Timeout-via-race is the usual example; it is also how a fast failure poisons a slower success. The loser is not cancelled. Chapter 1's two queues do not change that: both operations are already later cards.
+
+| NOTE: |
+| :--- |
+| Combinators compose *promises*, not *operations*. `Promise.all` cannot un-`fetch`. If you needed cancellation, you needed `AbortSignal` at the `fetch` call, not a different combinator. |
+
 * **`Promise.resolve(value)`** -- if `value` is a promise, returns it (mostly); if thenable, assimilates; otherwise returns a fulfilled promise. Use to lift a maybe-thenable into a real promise.
 * **`Promise.reject(reason)`** -- a rejected promise.
 * **`Promise.try(fn)`** (ES2025) -- runs `fn` synchronously, fulfills with its return, rejects if it throws *or* if it returns a rejected promise. The missing link for wrapping mixed sync/async functions without `new Promise`.
@@ -384,8 +410,10 @@ return new Promise(function(resolve,reject){
 return fetchStudent(id);
 ```
 
-The wrapper can drop rejections if you write `.then(resolve)` without `reject`, can double-resolve if you also call `resolve` yourself, and tells the next reader you don't trust `.then`'s return value. Trust it. That's the whole point of this chapter.
+The wrapper can drop rejections if you write `.then(resolve)` without `reject`, can double-resolve if you also call `resolve` yourself, and tells the next reader you don't trust `.then`'s return value. Trust it.
 
 Take the Chapter 2 hostile `fetch` (called twice, called with an error after success) and wrap it in `new Promise` *once*, with `onceLater` or a `called` flag in the executor. That's the adapter layer. Above that layer, speak only promises.
 
 Chapter 4 adds another kind of value-that-represents-a-sequence: iterators and generators. Combined with promises, they are the engine under `async`/`await`. Even if you only ever write `async function`, you should know what's moving. Don't skip Chapter 4 because the syntax looks old. `await` is that chapter wearing nicer clothes.
+
+[^PerformPromiseThen]: "27.2.1.3.1 PerformPromiseThen ( promise, onFulfilled, onRejected [ , resultCapability ] )", ECMAScript 2025 Language Specification; https://262.ecma-international.org/16.0/#sec-performpromisethen ; Accessed September 2026

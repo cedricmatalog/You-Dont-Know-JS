@@ -1,6 +1,8 @@
 # You Don't Know JS Yet: Sync & Async - 2nd Edition
 # Foreword
 
+Books 1–3 opened with guest essays. This title had no first-edition guest to reprint, so the note is mine.
+
 JS is single-threaded, except when it isn't. It runs to completion, except when you `await`. It has no data races, except when you opt into `SharedArrayBuffer`. Every one of those "except"s is a place a program can look correct and still be wrong *later*.
 
 This book is Book 5 of *You Don't Know JS Yet* because time is not a pillar of the language -- it's the clock the three pillars run on. Closures keep your variables alive across that clock. Promises are objects that reify "not yet." `await` is grammar that yields the turn.

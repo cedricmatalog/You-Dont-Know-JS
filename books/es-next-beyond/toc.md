@@ -73,6 +73,9 @@
     * Explicit Resource Management (`using` / `await using`)
     * More Module Graph
     * Wasm, Hosts, And "Is This Even JS?"
+    * How To Read A Horizon Feature
+        * Decorators Are A Compiler Tax Until They Aren't
+        * `using` And The Close You Were Going To Forget
     * How To Watch Without Drowning
     * You Still Don't Know JS *Yet*
 * Appendix A: Exploring Further

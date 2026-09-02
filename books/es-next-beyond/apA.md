@@ -26,7 +26,11 @@ Three different bets:
 
 APIs can polyfill. Syntax cannot (not without a compile step). That's why optional chaining showed up in codebases years before Temporal: Babel could rewrite `?.`; it could not invent a correct calendar.
 
-Don't polyfill `Proxy`. Don't polyfill `SharedArrayBuffer` with a fake that isn't shared. Don't transpile stage-2 pipes into a bank app. The tool is not the judgment.
+Don't polyfill `Proxy`. Don't polyfill `SharedArrayBuffer` with a fake that isn't shared. Don't transpile stage-2 pipes into a bank app.
+
+| WARNING: |
+| :--- |
+| A polyfill that does not pass test262 for the ugly corners is a *different language* that happens to share method names. Temporal especially: a half polyfill next to `Date` is two clocks. |
 
 ## `Date` Could Not Be Fixed In Place
 
@@ -207,7 +211,7 @@ Take `Object.groupBy` as a calm story, then Records as the other ending.
 
 Every feature you almost adopt is one of those two movies. Appendix A's job is to make you *classify the movie* before you buy a ticket. Methods are groupBy. New values are Records until proven otherwise. Syntax is `?.` -- medium, parse-sensitive, usually fine once stage 4. Host APIs are `fetch` -- not even this book's spec.
 
-If your team only remembers "JS gets nicer every June," they will star in the Records movie by accident. If they remember this appendix, they will ship `groupBy` and wait on pipes. That's the grain.
+If your team only remembers "JS gets nicer every June," they will star in the Records movie by accident. If they remember this appendix, they will ship `groupBy` and wait on pipes.
 
 When you're tempted to skip this appendix, that's usually the week a blog said "JS now does X." Fill the card anyway. Ten minutes. Then ship `printSummary` without X if X isn't stage 4 in your baseline.
 
@@ -222,7 +226,7 @@ When you're tempted to skip this appendix, that's usually the week a blog said "
 
 If you classified a blog post into one row before you paste the snippet, this appendix worked.
 
-Copy the kinds list into `BASELINE.md` if that helps the team. Methods you polyfill. Syntax you transpile-or-wait. Namespaces you polyfill. Primitives you don't bet. Hosts you queue-question. Modules you don't strip. Six rows. That's the appendix you can put on a wiki without the rest of this book.
+Copy the kinds list into `BASELINE.md` if that helps the team. Methods you polyfill. Syntax you transpile-or-wait. Namespaces you polyfill. Primitives you don't bet. Hosts you queue-question. Modules you don't strip. Six rows.
 
 ## Walk One `printSummary` Through The Card
 
@@ -268,11 +272,11 @@ Four lines of source. Four different rows. That's why Appendix A exists as a *pa
 
 A date on a polyfill is a promise to look. A plugin without a date is a fork. *Get Started* told you JS has many faces (engine, transpiler, linter). This appendix tells you which face you are looking at when a blog says "you can use X now."
 
-If you cannot fill that excerpt for your repo, you do not have a baseline. You have a pile of `package.json` ranges. Chapter 1 asked for the file. This appendix is the rows that go in it.
+If you cannot fill that excerpt for your repo, you do not have a baseline. You have a pile of `package.json` ranges. This series' own `BASELINE.md` (repo root) is that file for the reader app -- engines, syntax, Temporal polyfill, delete-by date. Chapter 1 asked for the file. This appendix is the rows that go in it.
 
 Appendix B is practice. The proposals repo is the homework that never ends.
 
-When the next June snapshot lands, do not re-read this book from page one. Open `BASELINE.md`. For each row that turned green in your engines, delete a polyfill. For each proposal that jumped a stage, update the card -- not the production code. For each proposal that died, keep the userland snippet. That's the yearly ritual this appendix is for. *Get Started* had "many faces." This book has "many Junes." Same habit. Different calendar.
+When the next June snapshot lands, do not re-read this book from page one. Open `BASELINE.md`. For each row that turned green in your engines, delete a polyfill. For each proposal that jumped a stage, update the card -- not the production code. For each proposal that died, keep the userland snippet. *Get Started* had "many faces." This book has "many Junes." Same habit. Different calendar.
 
 ```js
 // yearly ritual (June)
@@ -285,4 +289,4 @@ typeof Temporal == "object";
 // |> still a parse error until stage 4 AND baseline
 ```
 
-That's the appendix as a checklist. Chapter 1 asked you to fill a card once. This page asks you to fill it every June.
+Chapter 1 asked you to fill a card once. This page asks you to fill it every June.
